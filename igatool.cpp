@@ -30,8 +30,13 @@ struct Entry {
 
 #define BUFFER_SIZE 4096u
 
-static const uint32_t IGA_SIGNATURE = 0x30414749;
-static const size_t IGA_ENTRIES_OFFSET = 0x10;
+#define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
+
+static const uint8_t IGA_SIGNATURE[4] = { 'I', 'G', 'A', '0' };
+static const uint8_t IGA_UNKNOWN[4] = { 0x00, 0x00, 0x00, 0x00 };
+static const uint8_t IGA_PADDING[8] = { 0x02, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00 };
+static const size_t IGA_ENTRIES_OFFSET = sizeof(IGA_SIGNATURE) + sizeof(IGA_UNKNOWN)
+        + sizeof(IGA_PADDING);
 
 bool string_ends_with(const string &str, const string& suffix) {
     return str.size() >= suffix.size()
@@ -112,10 +117,11 @@ void Extract(const string &iga_path, const string &output_directory) {
     ifstream iga_file{iga_path, ios::binary};
     iga_file.exceptions(ios::failbit | ios::badbit);
 
-    uint32_t signature;
-    iga_file.read(reinterpret_cast<char *>(&signature), sizeof(signature));
-    if (signature != IGA_SIGNATURE) {
-        fprintf(stderr, "Unexpected signature: 0x%08X\n", signature);
+    auto signature = make_unique<uint8_t[]>(ARRAY_SIZE(IGA_SIGNATURE));
+    iga_file.read(reinterpret_cast<char *>(signature.get()), sizeof(IGA_SIGNATURE));
+    if (!equal(signature.get(), signature.get() + ARRAY_SIZE(IGA_SIGNATURE), IGA_SIGNATURE)) {
+        fprintf(stderr, "Unexpected signature: 0x%02X%02X%02X%02X\n", signature[0], signature[1],
+                signature[2], signature[3]);
         exit(1);
     }
 
@@ -179,6 +185,8 @@ void Compress(const string &iga_path, const vector<string> &input_paths) {
     iga_file.exceptions(ios::failbit | ios::badbit);
 
     iga_file.write(reinterpret_cast<const char *>(&IGA_SIGNATURE), sizeof(IGA_SIGNATURE));
+    iga_file.write(reinterpret_cast<const char *>(&IGA_UNKNOWN), sizeof(IGA_UNKNOWN));
+    iga_file.write(reinterpret_cast<const char *>(&IGA_PADDING), sizeof(IGA_PADDING));
 
     vector<Entry> entries{};
     for (const auto &input_path : input_paths) {
@@ -217,7 +225,6 @@ void Compress(const string &iga_path, const vector<string> &input_paths) {
     }
     auto entriesString{entriesStream.str()};
 
-    iga_file.seekp(IGA_ENTRIES_OFFSET);
     uint32_t entriesLength = entriesString.length();
     WritePackedUint32(iga_file, entriesLength);
     iga_file.write(entriesString.c_str(), entriesLength);
