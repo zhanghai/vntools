@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -37,13 +38,12 @@ uint32_t ReadPackedUint32(ifstream &iga_file) {
 }
 
 string ReadPackedString(ifstream &iga_file, size_t length) {
-    auto *buffer = new uint8_t[length];
+    auto buffer = make_unique<uint8_t[]>(length);
     for (size_t i = 0; i < length; ++i) {
         buffer[i] = (uint8_t) ReadPackedUint32(iga_file);
     }
     // This doesn't handle encoding, but we should have ASCII-only names.
-    string value{reinterpret_cast<char *>(buffer), length};
-    delete[] buffer;
+    string value{reinterpret_cast<char *>(buffer.get()), length};
     return value;
 }
 
@@ -99,7 +99,7 @@ void Extract(const string &iga_path, const string &output_directory) {
         }
     }
 
-    auto *buffer = new uint8_t[BUFFER_SIZE];
+    auto buffer = make_unique<uint8_t[]>(BUFFER_SIZE);
     for (const auto &entry : entries) {
         ofstream output_file{output_directory + entry.name, ios::binary};
         output_file.exceptions(ios::failbit | ios::badbit);
@@ -108,16 +108,15 @@ void Extract(const string &iga_path, const string &output_directory) {
         uint32_t size = 0;
         while (size < entry.size) {
             uint32_t transferSize = min(BUFFER_SIZE, entry.size - size);
-            iga_file.read(reinterpret_cast<char *>(buffer), transferSize);
+            iga_file.read(reinterpret_cast<char *>(buffer.get()), transferSize);
             for (size_t i = 0; i < transferSize; ++i) {
-                buffer[i] ^= (i + 2) ^ key;
+                buffer[i] ^= static_cast<uint8_t>((i + 2) ^ key);
             }
-            output_file.write(reinterpret_cast<char *>(buffer), transferSize);
+            output_file.write(reinterpret_cast<char *>(buffer.get()), transferSize);
             size += transferSize;
         }
         output_file.flush();
     }
-    delete[] buffer;
 }
 
 void Compress(const string &iga_path, const vector<string> &input_paths) {
