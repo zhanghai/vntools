@@ -69,7 +69,7 @@ bool WritePackedUint32Byte(ostream &stream, uint8_t byte, bool started, bool end
     started |= byte != 0;
     if (started | end) {
         byte <<= 1u;
-        if (!end) {
+        if (end) {
             byte |= 0b00000001u;
         }
         stream.write(reinterpret_cast<const char *>(&byte), sizeof(byte));
