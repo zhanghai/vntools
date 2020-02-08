@@ -28,16 +28,16 @@ void Usage(const string &program_name) {
 
 uint32_t ReadPackedUint32(ifstream &iga_file) {
     uint32_t value = 0;
-    while ((value & 1) == 0) {
+    while ((value & 1U) == 0) {
         uint8_t byte;
-        iga_file >> byte;
-        value = value << 7 | byte;
+        iga_file.read(reinterpret_cast<char *>(&byte), sizeof(byte));
+        value = value << 7U | byte;
     }
-    return value >> 1;
+    return value >> 1U;
 }
 
 string ReadPackedString(ifstream &iga_file, size_t length) {
-    uint8_t *buffer = new uint8_t[length];
+    auto *buffer = new uint8_t[length];
     for (size_t i = 0; i < length; ++i) {
         buffer[i] = (uint8_t) ReadPackedUint32(iga_file);
     }
@@ -52,7 +52,7 @@ void Extract(const string &iga_path, const string &output_directory) {
     iga_file.exceptions(ios::failbit | ios::badbit);
 
     uint32_t signature;
-    iga_file >> signature;
+    iga_file.read(reinterpret_cast<char *>(&signature), sizeof(signature));
     if (signature != 0x30414749) {
         fprintf(stderr, "Unexpected signature: 0x%08X\n", signature);
         exit(1);
@@ -90,15 +90,13 @@ void Extract(const string &iga_path, const string &output_directory) {
         }
     }
 
-    uint8_t *buffer = new uint8_t[BUFFER_SIZE];
-    for (vector<Entry>::iterator it = entries.begin(); it != entries.end();
-         ++it) {
-        const Entry &entry = *it;
+    auto *buffer = new uint8_t[BUFFER_SIZE];
+    for (const auto &entry : entries) {
         iga_file.seekg(entry.offset);
         ofstream output_file{output_directory + entry.name, ios::binary};
         uint32_t size = 0;
         while (size < entry.size) {
-            uint32_t transferSize = max(BUFFER_SIZE, entry.size - size);
+            uint32_t transferSize = min(BUFFER_SIZE, entry.size - size);
             iga_file.read(reinterpret_cast<char *>(buffer), transferSize);
             output_file.write(reinterpret_cast<char *>(buffer), transferSize);
             size += transferSize;
