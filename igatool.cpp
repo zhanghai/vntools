@@ -155,6 +155,7 @@ void Extract(const string &iga_path, const string &output_directory) {
             "BUFFER_SIZE must be a multiple of (UINT8_MAX + 1) for decryption to work");
     auto buffer = make_unique<uint8_t[]>(BUFFER_SIZE);
     for (const auto &entry : entries) {
+        cout << entry.name << endl;
         ofstream output_file{entry.path, ios::binary};
         output_file.exceptions(ios::failbit | ios::badbit);
         iga_file.seekg(entry.offset);
