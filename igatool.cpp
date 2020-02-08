@@ -28,12 +28,12 @@ void Usage(const string &program_name) {
 
 uint32_t ReadPackedUint32(ifstream &iga_file) {
     uint32_t value = 0;
-    while ((value & 1U) == 0) {
+    while ((value & 1u) == 0) {
         uint8_t byte;
         iga_file.read(reinterpret_cast<char *>(&byte), sizeof(byte));
-        value = value << 7U | byte;
+        value = value << 7u | byte;
     }
-    return value >> 1U;
+    return value >> 1u;
 }
 
 string ReadPackedString(ifstream &iga_file, size_t length) {
@@ -45,6 +45,11 @@ string ReadPackedString(ifstream &iga_file, size_t length) {
     string value{reinterpret_cast<char *>(buffer), length};
     delete[] buffer;
     return value;
+}
+
+bool string_ends_with(const string &str, const string& suffix) {
+    return str.size() >= suffix.size()
+           && str.compare(str.size()-suffix.size(), suffix.size(), suffix) == 0;
 }
 
 void Extract(const string &iga_path, const string &output_directory) {
@@ -92,12 +97,16 @@ void Extract(const string &iga_path, const string &output_directory) {
 
     auto *buffer = new uint8_t[BUFFER_SIZE];
     for (const auto &entry : entries) {
+        uint8_t key = string_ends_with(entry.name, ".s") ? 0xFFu : 0;
         iga_file.seekg(entry.offset);
         ofstream output_file{output_directory + entry.name, ios::binary};
         uint32_t size = 0;
         while (size < entry.size) {
             uint32_t transferSize = min(BUFFER_SIZE, entry.size - size);
             iga_file.read(reinterpret_cast<char *>(buffer), transferSize);
+            for (size_t i = 0; i < transferSize; ++i) {
+                buffer[i] ^= (i + 2) ^ key;
+            }
             output_file.write(reinterpret_cast<char *>(buffer), transferSize);
             size += transferSize;
         }
