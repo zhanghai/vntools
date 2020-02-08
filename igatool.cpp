@@ -196,7 +196,7 @@ void Compress(const string &iga_path, const vector<string> &input_paths) {
         WritePackedString(namesStream, entry.name);
         name_offset += entry.name.length();
     }
-    auto namesString = namesStream.str();
+    auto namesString{namesStream.str()};
 
     uint32_t offset = 0;
     for (auto &entry : entries) {
@@ -215,7 +215,7 @@ void Compress(const string &iga_path, const vector<string> &input_paths) {
         WritePackedUint32(entriesStream, entry.offset);
         WritePackedUint32(entriesStream, entry.size);
     }
-    auto entriesString = entriesStream.str();
+    auto entriesString{entriesStream.str()};
 
     iga_file.seekp(IGA_ENTRIES_OFFSET);
     uint32_t entriesLength = entriesString.length();
@@ -253,7 +253,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     bool extract;
-    string argv1(argv[1]);
+    string argv1{argv[1]};
     if (argv1 == "-x") {
         extract = true;
     } else if (argv1 == "-c") {
