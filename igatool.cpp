@@ -52,6 +52,10 @@ bool string_ends_with(const string &str, const string& suffix) {
            && str.compare(str.size()-suffix.size(), suffix.size(), suffix) == 0;
 }
 
+uint8_t GetDataKey(const string &name) {
+    return string_ends_with(name, ".s") ? 0xFFu : 0;
+}
+
 void Extract(const string &iga_path, const string &output_directory) {
     ifstream iga_file{iga_path, ios::binary};
     iga_file.exceptions(ios::failbit | ios::badbit);
@@ -97,9 +101,10 @@ void Extract(const string &iga_path, const string &output_directory) {
 
     auto *buffer = new uint8_t[BUFFER_SIZE];
     for (const auto &entry : entries) {
-        uint8_t key = string_ends_with(entry.name, ".s") ? 0xFFu : 0;
-        iga_file.seekg(entry.offset);
         ofstream output_file{output_directory + entry.name, ios::binary};
+        output_file.exceptions(ios::failbit | ios::badbit);
+        iga_file.seekg(entry.offset);
+        uint8_t key = GetDataKey(entry.name);
         uint32_t size = 0;
         while (size < entry.size) {
             uint32_t transferSize = min(BUFFER_SIZE, entry.size - size);
