@@ -50,8 +50,8 @@ string GetFileName(const string &path) {
 }
 
 void Usage(const string &program_name) {
-    cerr << "Usage: " << program_name << " x IGA_FILE [OUTPUT_DIRECOTRY]\n"
-            "Usage: " << program_name << " c IGA_FILE INPUT_FILE...\n";
+    cerr << "Usage: " << program_name << " -x IGA_FILE [OUTPUT_DIRECOTRY]\n"
+            "Usage: " << program_name << " -c IGA_FILE INPUT_FILE...\n";
 }
 
 uint32_t ReadPackedUint32(istream &stream) {
@@ -254,9 +254,9 @@ int main(int argc, char *argv[]) {
     }
     bool extract;
     string argv1(argv[1]);
-    if (argv1 == "x") {
+    if (argv1 == "-x") {
         extract = true;
-    } else if (argv1 == "c") {
+    } else if (argv1 == "-c") {
         extract = false;
     } else {
         Usage(argv[0]);
