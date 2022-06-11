@@ -14,10 +14,10 @@ make
 ## Usage
 
 ```bash
-igatool -x IGA_FILE [OUTPUT_DIRECOTRY]
+igatool -x|-xd IGA_FILE [OUTPUT_DIRECOTRY]
 igatool -c IGA_FILE INPUT_FILE...
 ```
 
-## Note
+## Shenghuixinglanxueyuan
 
 Shenghuixinglanxueyuan packed their `.iga` files into their executable with [Enigma Virtual Box](https://enigmaprotector.com/en/aboutvb.html). Once unpacked, their `.iga` files can be extracted as usual.
