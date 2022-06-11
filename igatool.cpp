@@ -101,6 +101,16 @@ string ReadPackedString(istream &stream, size_t length) {
     return value;
 }
 
+string ReadLastPackedString(istream &stream, size_t end) {
+    auto buffer = make_unique<vector<uint8_t>>();
+    while (static_cast<size_t>(stream.tellg()) < end) {
+        buffer->push_back(static_cast<uint8_t>(ReadPackedUint32(stream)));
+    }
+    // This doesn't handle encoding, but we should have ASCII-only names.
+    string value{reinterpret_cast<char *>(buffer->data()), buffer->size()};
+    return value;
+}
+
 void WritePackedString(ostream &stream, const string &value) {
     // This doesn't handle encoding, but we should have ASCII-only names.
     auto buffer = reinterpret_cast<const uint8_t *>(value.c_str());
@@ -141,16 +151,26 @@ void Extract(const string &iga_path, const string &output_directory) {
     }
 
     uint32_t names_length = ReadPackedUint32(iga_file);
-    size_t data_start = static_cast<size_t>(iga_file.tellg()) + names_length;
+    size_t names_end = static_cast<size_t>(iga_file.tellg()) + names_length;
     for (size_t i = 0; i < entries.size(); ++i) {
         Entry &entry = entries[i];
-        size_t name_length = (i + 1 < entries.size() ? entries[i + 1].name_offset : names_length)
-                             - entry.name_offset;
-        entry.name = ReadPackedString(iga_file, name_length);
-
-        entry.offset += data_start;
+        if (i < entries.size() - 1) {
+            size_t name_length = entries[i + 1].name_offset - entry.name_offset;
+            entry.name = ReadPackedString(iga_file, name_length);
+        } else {
+            // Assuming that entry names are in ASCII, the actual number of bytes used in the file
+            // for an entry name should be the same as the difference of name_offset of adjacent
+            // entries. However, Shenghuixinglanxueyuan somehow unnecessarily writes one extra 0
+            // byte before bytes that have their second-highest bit set to 1 (e.g. lower case
+            // letters), but they are still reporting the number of packed uint32s (instead of
+            // actual number of bytes used in the file) for name_offset, so that the file pointer
+            // will no longer be in sync with name_offset and it broke the simple logic of reading
+            // (names_end - name_offset of second last entry） packed uint32s. In this case, we can
+            // only read all the packed uint32s until we meet names_end.
+            entry.name = ReadLastPackedString(iga_file, names_end);
+        }
+        entry.offset += names_end;
         entry.path = output_directory + SEPARATOR + entry.name;
-
         if (entry.offset + entry.size > file_size) {
             throw out_of_range("Entry offset: " + to_string(entry.offset) + ", size: "
                                + to_string(entry.size) + ", file size: " + to_string(file_size));
