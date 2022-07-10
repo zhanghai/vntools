@@ -300,7 +300,7 @@ val instructionDescriptors = listOf(
     ),
     InstructionDescriptor("clearVerticalMessages", 0x4C.UB, 0x04.UB),
     InstructionDescriptor(
-        "setWindowVisibleWithFade", 0x4D.UB, 0x08.UB,
+        "fadeWindow", 0x4D.UB, 0x08.UB,
         ParameterDescriptor("visible", 3..3, Boolean::class.java),
         ParameterDescriptor("duration", 4..5, UShort::class.java)
     ),
@@ -373,7 +373,7 @@ val instructionDescriptors = listOf(
         ParameterDescriptor("alpha", 12..12, UByte::class.java),
         ParameterDescriptor("duration", 16..17, UShort::class.java)
     ),
-    InstructionDescriptor("startAllForegroundAnimations", 0x74.UB, 0x04.UB),
+    InstructionDescriptor("playAllForegroundAnimations", 0x74.UB, 0x04.UB),
     InstructionDescriptor(
         "stopForegroundAnimation", 0x75.UB, 0x04.UB,
         ParameterDescriptor("index", 2..2, UByte::class.java)
@@ -415,13 +415,13 @@ val instructionDescriptors = listOf(
         stringNames = "fileNameLength" to "fileName"
     ),
     InstructionDescriptor(
-        "setWindowType", 0xB6.UB, 0x04.UB,
-        ParameterDescriptor("type", 2..2, UByte::class.java) {
+        "setWindowStyle", 0xB6.UB, 0x04.UB,
+        ParameterDescriptor("style", 2..2, UByte::class.java) {
             // 0: Normal
             // 1: Vertical
             // 2: Transparent
             require(it in ubyteArrayOf(0.UB, 1.UB, 2.UB)) {
-                "unimportantByte ($it) !in arrayOf(0, 1, 2)"
+                "style ($it) !in arrayOf(0, 1, 2)"
             }
         }
     ),
@@ -432,35 +432,35 @@ val instructionDescriptors = listOf(
     // Always called before an end is set as completed, but doesn't seem to do anything interesting.
     InstructionDescriptor("0xBA", 0xBA.UB, 0x04.UB),
     InstructionDescriptor(
-        "decreaseMusicVolume", 0xBB.UB, 0x08.UB,
+        "fadeOutMusic", 0xBB.UB, 0x08.UB,
         ParameterDescriptor("volume", 3..3, UByte::class.java) {
             require(it in 0.UB..100.UB) { "volume ($it) !in 0..100" }
         },
-        ParameterDescriptor("fadeOutDuration", 4..5, UShort::class.java)
+        ParameterDescriptor("duration", 4..5, UShort::class.java)
     ),
     InstructionDescriptor(
-        "increaseMusicVolume", 0xBC.UB, 0x08.UB,
+        "fadeInMusic", 0xBC.UB, 0x08.UB,
         ParameterDescriptor("volume", 2..2, UByte::class.java) {
             require(it in 0.UB..100.UB) { "volume ($it) !in 0..100" }
         },
-        ParameterDescriptor("fadeInDuration", 4..5, UShort::class.java)
+        ParameterDescriptor("duration", 4..5, UShort::class.java)
     ),
     InstructionDescriptor(
-        "decreaseAllSoundEffectsVolume", 0xBD.UB, 0x08.UB,
+        "fadeOutAllSoundEffects", 0xBD.UB, 0x08.UB,
         ParameterDescriptor("volume", 3..3, UByte::class.java) {
             require(it in 0.UB..100.UB) { "volume ($it) !in 0..100" }
         },
-        ParameterDescriptor("fadeOutDuration", 4..5, UShort::class.java)
+        ParameterDescriptor("duration", 4..5, UShort::class.java)
     ),
     InstructionDescriptor(
-        "increaseAllSoundEffectsVolume", 0xBE.UB, 0x08.UB,
+        "fadeInAllSoundEffects", 0xBE.UB, 0x08.UB,
         ParameterDescriptor("volume", 3..3, UByte::class.java) {
             require(it in 0.UB..100.UB) { "volume ($it) !in 0..100" }
         },
-        ParameterDescriptor("fadeInDuration", 4..5, UShort::class.java)
+        ParameterDescriptor("duration", 4..5, UShort::class.java)
     ),
     InstructionDescriptor(
-        "startForegroundAnimations", 0xBF.UB, 0x10.UB,
+        "playForegroundAnimations", 0xBF.UB, 0x10.UB,
         ParameterDescriptor("count", 2..2, UByte::class.java),
         ParameterDescriptor("indices", 3..15, ByteArray::class.java)
     ),
