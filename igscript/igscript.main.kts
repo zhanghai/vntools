@@ -566,9 +566,9 @@ fun <I> parseInstruction(
     return Instruction(descriptor, parameters, bytes)
 }
 
-val SHIFT_JIS = Charset.forName("Shift_JIS")
+val WINDOWS_31J = Charset.forName("windows-31j")
 
-val charset = SHIFT_JIS
+val charset = WINDOWS_31J
 val arg0File = File(args[0])
 val arg0IsDirectory = arg0File.isDirectory
 val inputFiles = if (arg0IsDirectory) {
