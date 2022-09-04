@@ -1,10 +1,12 @@
 CXXFLAGS ?= -O2 -Wall -Wextra -Werror
 
-igatool : igatool.o
+OS := $(patsubst %.cpp,%.o,$(wildcard *.cpp))
+
+igatool : $(OS)
 	$(CXX) $(LDFLAGS) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
-.INTERMEDIATE : igatool.o
-igatool.o : igatool.cpp
+.INTERMEDIATE : $(OS)
+%.o : %.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $^ -o $@
 
 .PHONY : clean

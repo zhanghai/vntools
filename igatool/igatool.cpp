@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 /**
@@ -16,9 +17,10 @@ using namespace std;
 
 struct Entry {
     uint32_t name_offset;
-    string name;
     uint32_t offset;
     uint32_t size;
+    string name;
+    string encrypted_name;
     string path;
 };
 
@@ -32,16 +34,31 @@ struct Entry {
 
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
 
-static const uint8_t IGA_SIGNATURE[4] = { 'I', 'G', 'A', '0' };
-static const uint8_t IGA_UNKNOWN[4] = { 0x00, 0x00, 0x00, 0x00 };
-static const uint8_t IGA_PADDING[8] = { 0x02, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00 };
-static const size_t IGA_ENTRIES_OFFSET = sizeof(IGA_SIGNATURE) + sizeof(IGA_UNKNOWN)
-        + sizeof(IGA_PADDING);
-
 bool string_ends_with(const string &str, const string& suffix) {
     return str.size() >= suffix.size()
            && str.compare(str.size()-suffix.size(), suffix.size(), suffix) == 0;
 }
+
+const uint8_t IGA_SIGNATURE[4] = { 'I', 'G', 'A', '0' };
+const uint8_t IGA_UNKNOWN[4] = { 0x00, 0x00, 0x00, 0x00 };
+const uint8_t IGA_PADDING[8] = { 0x02, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00 };
+const size_t IGA_ENTRIES_OFFSET = sizeof(IGA_SIGNATURE) + sizeof(IGA_UNKNOWN)
+        + sizeof(IGA_PADDING);
+
+string CreateBase36Characters() {
+    string characters{""};
+    for (char c = '0'; c <= '9'; ++c) {
+        characters += c;
+    }
+    for (char c = 'a'; c <= 'z'; ++c) {
+        characters += c;
+    }
+    return characters;
+}
+
+const string BASE36_CHARACTERS = CreateBase36Characters();
+
+extern const unordered_map<string, string> ENCRYPTED_NAMES;
 
 string GetFileName(const string &path) {
     size_t last_separator_index = path.find_last_of(SEPARATOR);
@@ -55,8 +72,9 @@ string GetFileName(const string &path) {
 }
 
 void Usage(const string &program_name) {
-    cerr << "Usage: " << program_name << " -x|-xs IGA_FILE [OUTPUT_DIRECOTRY]\n"
-            "Usage: " << program_name << " -c IGA_FILE INPUT_FILE...\n";
+    cerr << "Usage: " << program_name << " -l IGA_FILE" << endl
+            << "Usage: " << program_name << " -x IGA_FILE [OUTPUT_DIRECOTRY]" << endl
+            << "Usage: " << program_name << " -c IGA_FILE INPUT_FILE..." << endl;
 }
 
 uint32_t ReadPackedUint32(istream &stream) {
@@ -119,7 +137,7 @@ void WritePackedString(ostream &stream, const string &value) {
     }
 }
 
-void Extract(const string &iga_path, bool is_shxlxy, const string &output_directory) {
+void Extract(const string &iga_path, bool is_list, const string &output_directory) {
     ifstream iga_file{iga_path, ios::binary};
     iga_file.exceptions(ios::failbit | ios::badbit);
 
@@ -150,9 +168,10 @@ void Extract(const string &iga_path, bool is_shxlxy, const string &output_direct
     size_t names_end = static_cast<size_t>(iga_file.tellg()) + names_length;
     for (size_t i = 0; i < entries.size(); ++i) {
         Entry &entry = entries[i];
+        string name;
         if (i < entries.size() - 1) {
             size_t name_length = entries[i + 1].name_offset - entry.name_offset;
-            entry.name = ReadPackedString(iga_file, name_length);
+            name = ReadPackedString(iga_file, name_length);
         } else {
             // Assuming that entry names are in ASCII, the actual number of bytes used in the file
             // for an entry name should be the same as the difference of name_offset of adjacent
@@ -163,14 +182,35 @@ void Extract(const string &iga_path, bool is_shxlxy, const string &output_direct
             // will no longer be in sync with name_offset and it broke the simple logic of reading
             // (names_end - name_offset of second last entry） packed uint32s. In this case, we can
             // only read all the packed uint32s until we meet names_end.
-            entry.name = ReadLastPackedString(iga_file, names_end);
+            name = ReadLastPackedString(iga_file, names_end);
+        }
+        if (name.size() == 12 && name.find_first_not_of(BASE36_CHARACTERS) == string::npos) {
+            entry.encrypted_name = name;
+            const auto &iter = ENCRYPTED_NAMES.find(name);
+            if (iter != ENCRYPTED_NAMES.end()) {
+                entry.name = iter->second;
+            } else {
+                cerr << "Warning: Unknown encrypted name: " << name << endl;
+                entry.name = name;
+            }
+        } else {
+            entry.name = name;
         }
         entry.offset += names_end;
-        entry.path = output_directory + SEPARATOR + entry.name;
+        if (!is_list) {
+            entry.path = output_directory + SEPARATOR + entry.name;
+        }
         if (entry.offset + entry.size > file_size) {
             throw out_of_range("Entry offset: " + to_string(entry.offset) + ", size: "
                                + to_string(entry.size) + ", file size: " + to_string(file_size));
         }
+    }
+
+    if (is_list) {
+        for (const auto &entry : entries) {
+            cout << entry.name << endl;
+        }
+        return;
     }
 
     static_assert(BUFFER_SIZE % (UINT8_MAX + 1) == 0,
@@ -188,11 +228,11 @@ void Extract(const string &iga_path, bool is_shxlxy, const string &output_direct
             iga_file.read(reinterpret_cast<char *>(buffer.get()), transferSize);
             for (size_t i = 0; i < transferSize; ++i) {
                 uint8_t key = static_cast<uint8_t>(i + 2);
-                if (is_script || is_shxlxy) {
+                if (is_script) {
                     key ^= 0xFF;
-                }
-                if (is_shxlxy) {
-                    key ^= static_cast<uint8_t>(0x5C * (i + 1));
+                    if (!entry.encrypted_name.empty()) {
+                        key ^= static_cast<uint8_t>(0x5C * (i + 1));
+                    }
                 }
                 buffer[i] ^= key;
             }
@@ -247,7 +287,6 @@ void Compress(const string &iga_path, const vector<string> &input_paths) {
         WritePackedUint32(entriesStream, entry.size);
     }
     auto entriesString{entriesStream.str()};
-
     uint32_t entriesLength = entriesString.length();
     WritePackedUint32(iga_file, entriesLength);
     iga_file.write(entriesString.c_str(), entriesLength);
@@ -289,28 +328,22 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     string argv1{argv[1]};
-    bool extract;
-    bool is_shxlxy;
-    if (argv1 == "-x") {
-        extract = true;
-        is_shxlxy = false;
-    } else if (argv1 == "-xs") {
-        extract = true;
-        is_shxlxy = true;
-    } else if (argv1 == "-c") {
-        extract = false;
-    } else {
-        Usage(argv[0]);
-        return 1;
-    }
-    if (extract) {
+    if (argv1 == "-l") {
+        if (argc != 3) {
+            Usage(argv[0]);
+            return 1;
+        }
+        Extract(argv[2], true, ".");
+        return 0;
+    } else if (argv1 == "-x") {
         if (!(argc == 3 || argc == 4)) {
             Usage(argv[0]);
             return 1;
         }
         string output_directory = argc == 4 ? argv[3] : ".";
-        Extract(argv[2], is_shxlxy, output_directory);
-    } else {
+        Extract(argv[2], false, output_directory);
+        return 0;
+    } else if (argv1 == "-c") {
         if (argc < 3) {
             Usage(argv[0]);
             return 1;
@@ -320,6 +353,9 @@ int main(int argc, char *argv[]) {
             input_files.emplace_back(argv[i]);
         }
         Compress(argv[2], input_files);
+        return 0;
+    } else {
+        Usage(argv[0]);
+        return 1;
     }
-    return 0;
 }

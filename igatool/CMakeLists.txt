@@ -3,5 +3,5 @@ project(igatool)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(igatool igatool.cpp)
+add_executable(igatool encrypted_names.cpp igatool.cpp)
 target_compile_options(igatool PRIVATE -Wall -Wextra -pedantic -Werror)
