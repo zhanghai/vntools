@@ -55,7 +55,7 @@ string GetFileName(const string &path) {
 }
 
 void Usage(const string &program_name) {
-    cerr << "Usage: " << program_name << " -x|-xd IGA_FILE [OUTPUT_DIRECOTRY]\n"
+    cerr << "Usage: " << program_name << " -x|-xs IGA_FILE [OUTPUT_DIRECOTRY]\n"
             "Usage: " << program_name << " -c IGA_FILE INPUT_FILE...\n";
 }
 
@@ -119,11 +119,7 @@ void WritePackedString(ostream &stream, const string &value) {
     }
 }
 
-uint8_t GetDataKey(const string &name, bool force_encryption) {
-    return force_encryption || string_ends_with(name, ".s") ? 0xFFu : 0;
-}
-
-void Extract(const string &iga_path, bool force_decryption, const string &output_directory) {
+void Extract(const string &iga_path, bool is_shxlxy, const string &output_directory) {
     ifstream iga_file{iga_path, ios::binary};
     iga_file.exceptions(ios::failbit | ios::badbit);
 
@@ -185,13 +181,21 @@ void Extract(const string &iga_path, bool force_decryption, const string &output
         ofstream output_file{entry.path, ios::binary};
         output_file.exceptions(ios::failbit | ios::badbit);
         iga_file.seekg(entry.offset);
-        uint8_t key = GetDataKey(entry.name, force_decryption);
+        bool is_script = string_ends_with(entry.name, ".s");
         uint32_t size = 0;
         while (size < entry.size) {
             uint32_t transferSize = min(BUFFER_SIZE, entry.size - size);
             iga_file.read(reinterpret_cast<char *>(buffer.get()), transferSize);
             for (size_t i = 0; i < transferSize; ++i) {
-                buffer[i] ^= static_cast<uint8_t>((i + 2) ^ key);
+                uint8_t key;
+                if (is_shxlxy) {
+                    key = static_cast<uint8_t>(((0x5C * (i + 1)) & 0xFF) ^ 0xFF);
+                } else if (is_script) {
+                    key = static_cast<uint8_t>((i + 2) ^ 0xFF);
+                } else {
+                    key = static_cast<uint8_t>(i + 2);
+                }
+                buffer[i] ^= key;
             }
             output_file.write(reinterpret_cast<char *>(buffer.get()), transferSize);
             size += transferSize;
@@ -259,13 +263,19 @@ void Compress(const string &iga_path, const vector<string> &input_paths) {
     for (auto &entry : entries) {
         ifstream input_file{entry.path, ios::binary};
         input_file.exceptions(ios::failbit | ios::badbit);
-        uint8_t key = GetDataKey(entry.name, false);
+        bool is_script = string_ends_with(entry.name, ".s");
         uint32_t size = 0;
         while (size < entry.size) {
             uint32_t transferSize = min(BUFFER_SIZE, entry.size - size);
             input_file.read(reinterpret_cast<char *>(buffer.get()), transferSize);
             for (size_t i = 0; i < transferSize; ++i) {
-                buffer[i] ^= static_cast<uint8_t>((i + 2) ^ key);
+                uint8_t key;
+                if (is_script) {
+                    key = static_cast<uint8_t>((i + 2) ^ 0xFF);
+                } else {
+                    key = static_cast<uint8_t>(i + 2);
+                }
+                buffer[i] ^= key;
             }
             iga_file.write(reinterpret_cast<char *>(buffer.get()), transferSize);
             size += transferSize;
@@ -281,13 +291,13 @@ int main(int argc, char *argv[]) {
     }
     string argv1{argv[1]};
     bool extract;
-    bool force_decryption;
+    bool is_shxlxy;
     if (argv1 == "-x") {
         extract = true;
-        force_decryption = false;
-    } else if (argv1 == "-xd") {
+        is_shxlxy = false;
+    } else if (argv1 == "-xs") {
         extract = true;
-        force_decryption = true;
+        is_shxlxy = true;
     } else if (argv1 == "-c") {
         extract = false;
     } else {
@@ -300,7 +310,7 @@ int main(int argc, char *argv[]) {
             return 1;
         }
         string output_directory = argc == 4 ? argv[3] : ".";
-        Extract(argv[2], force_decryption, output_directory);
+        Extract(argv[2], is_shxlxy, output_directory);
     } else {
         if (argc < 3) {
             Usage(argv[0]);
