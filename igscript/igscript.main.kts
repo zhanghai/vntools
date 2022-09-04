@@ -153,18 +153,18 @@ val instructionDescriptors = listOf(
         ParameterDescriptor("duration", 4..5, UShort::class.java)
     ),
     InstructionDescriptor(
-        "setBackground1", 0x0F.UB, 0x04.UB,
+        "setBackground", 0x0F.UB, 0x04.UB,
         ParameterDescriptor("_", 2..2, UByte::class.java),
         ParameterDescriptor("fileNameLength", 3..3, UByte::class.java),
         stringNames = "fileNameLength" to "fileName"
     ),
     InstructionDescriptor(
-        "setBackground2", 0x10.UB, 0x04.UB,
+        "setBackgroundAndClearForegroundsAndAvatar", 0x10.UB, 0x04.UB,
         ParameterDescriptor("_", 2..2, UByte::class.java),
         ParameterDescriptor("fileNameLength", 3..3, UByte::class.java),
         stringNames = "fileNameLength" to "fileName"
     ),
-    InstructionDescriptor("clearAvatarAndForegrounds", 0x11.UB, 0x08.UB),
+    InstructionDescriptor("clearForegroundsAndAvatar", 0x11.UB, 0x08.UB),
     InstructionDescriptor(
         "loadForeground1", 0x12.UB, 0x04.UB,
         ParameterDescriptor("index", 2..2, UByte::class.java),
@@ -183,7 +183,7 @@ val instructionDescriptors = listOf(
         ParameterDescriptor("transitionDuration", 4..5, UShort::class.java)
     ),
     InstructionDescriptor(
-        "clearImagesAndSetBackgroundColor", 0x16.UB, 0x08.UB,
+        "setBackgroundColorAndClearForegroundsAndAvatar", 0x16.UB, 0x08.UB,
         ParameterDescriptor("_", 2..2, UByte::class.java),
         ParameterDescriptor("color", 4..6, ByteArray::class.java)
     ),
