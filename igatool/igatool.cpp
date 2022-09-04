@@ -187,13 +187,12 @@ void Extract(const string &iga_path, bool is_shxlxy, const string &output_direct
             uint32_t transferSize = min(BUFFER_SIZE, entry.size - size);
             iga_file.read(reinterpret_cast<char *>(buffer.get()), transferSize);
             for (size_t i = 0; i < transferSize; ++i) {
-                uint8_t key;
+                uint8_t key = static_cast<uint8_t>(i + 2);
+                if (is_script || is_shxlxy) {
+                    key ^= 0xFF;
+                }
                 if (is_shxlxy) {
-                    key = static_cast<uint8_t>(((0x5C * (i + 1)) & 0xFF) ^ 0xFF);
-                } else if (is_script) {
-                    key = static_cast<uint8_t>((i + 2) ^ 0xFF);
-                } else {
-                    key = static_cast<uint8_t>(i + 2);
+                    key ^= static_cast<uint8_t>(0x5C * (i + 1));
                 }
                 buffer[i] ^= key;
             }
