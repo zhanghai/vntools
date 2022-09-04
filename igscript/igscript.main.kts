@@ -567,6 +567,7 @@ fun <I> parseInstruction(
 }
 
 val WINDOWS_31J = Charset.forName("windows-31j")
+val GBK = Charset.forName("GBK")
 
 val charset = WINDOWS_31J
 val arg0File = File(args[0])
