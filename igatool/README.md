@@ -11,6 +11,12 @@ cmake ..
 make
 ```
 
+Or simply:
+
+```bash
+make
+```
+
 ## Usage
 
 ```bash
