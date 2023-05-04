@@ -22,10 +22,13 @@ val Int.S: Short
 val Int.US: UShort
     get() = toUShort()
 
+val Int.U: UInt
+    get() = toUInt()
+
 fun <I> I.readNBytesFully(len: Int): ByteArray where I : InputStream, I : DataInput =
     ByteArray(len).apply { readFully(this) }
 
-class JumpTarget(val offset: UShort) {
+class JumpTarget(val offset: UInt) {
     override fun toString(): String = "label_$offset"
 }
 
@@ -40,7 +43,8 @@ class ParameterDescriptor<T>(
         require(rangeLength > 0) { "rangeLength ($rangeLength) <= 0" }
         val typeLength = when (type) {
             Boolean::class.java, UByte::class.java -> 1
-            Short::class.java, UShort::class.java, JumpTarget::class.java -> 2
+            Short::class.java, UShort::class.java -> 2
+            JumpTarget::class.java -> 4
             ByteArray::class.java -> -1
             else -> error("Unknown parameter type (${type})")
         }
@@ -121,22 +125,19 @@ val instructionDescriptors = listOf(
         "jumpIfVariableEqualTo", 0x06.UB, 0x10.UB,
         ParameterDescriptor("index", 4..4, UByte::class.java),
         ParameterDescriptor("value", 8..9, Short::class.java),
-        ParameterDescriptor("target", 12..13, JumpTarget::class.java),
-        ParameterDescriptor("_", 14..14, Boolean::class.java)
+        ParameterDescriptor("target", 12..15, JumpTarget::class.java)
     ),
     InstructionDescriptor(
         "jumpIfVariableGreaterThan", 0x08.UB, 0x10.UB,
         ParameterDescriptor("index", 4..4, UByte::class.java),
         ParameterDescriptor("value", 8..9, Short::class.java),
-        ParameterDescriptor("target", 12..13, JumpTarget::class.java),
-        ParameterDescriptor("_", 14..14, Boolean::class.java)
+        ParameterDescriptor("target", 12..15, JumpTarget::class.java)
     ),
     InstructionDescriptor(
         "jumpIfVariableLessThan", 0x09.UB, 0x10.UB,
         ParameterDescriptor("index", 4..4, UByte::class.java),
         ParameterDescriptor("value", 8..9, Short::class.java),
-        ParameterDescriptor("target", 12..13, JumpTarget::class.java),
-        ParameterDescriptor("_", 14..14, Boolean::class.java)
+        ParameterDescriptor("target", 12..15, JumpTarget::class.java)
     ),
     InstructionDescriptor(
         "setMessageIndex", 0x0C.UB, 0x08.UB,
@@ -144,8 +145,7 @@ val instructionDescriptors = listOf(
     ),
     InstructionDescriptor(
         "jump", 0x0D.UB, 0x08.UB,
-        ParameterDescriptor("target", 4..5, JumpTarget::class.java),
-        ParameterDescriptor("_", 6..6, Boolean::class.java)
+        ParameterDescriptor("target", 4..7, JumpTarget::class.java)
     ),
     InstructionDescriptor(
         "wait", 0x0E.UB, 0x08.UB,
@@ -194,8 +194,7 @@ val instructionDescriptors = listOf(
     InstructionDescriptor(
         "addChoice", 0x1D.UB, 0x08.UB,
         ParameterDescriptor("textLength", 2..2, UByte::class.java),
-        ParameterDescriptor("target", 4..5, JumpTarget::class.java),
-        ParameterDescriptor("_", 6..6, UByte::class.java),
+        ParameterDescriptor("target", 4..7, JumpTarget::class.java)
         stringNames = "textLength" to "text"
     ),
     // Only appeared in Ete and Automne and only called for non-virtual ends.
@@ -286,7 +285,7 @@ val instructionDescriptors = listOf(
     InstructionDescriptor(
         "jumpIfHasCompletedEnds", 0x3B.UB, 0x08.UB,
         ParameterDescriptor("count", 2..2, UByte::class.java),
-        ParameterDescriptor("target", 4..5, JumpTarget::class.java)
+        ParameterDescriptor("target", 4..7, JumpTarget::class.java)
     ),
     InstructionDescriptor(
         "addBacklog", 0x3F.UB, 0x04.UB,
@@ -518,7 +517,7 @@ fun <I> parseInstruction(
             UShort::class.java ->
                 ByteBuffer.wrap(parameterBytes).order(ByteOrder.LITTLE_ENDIAN).short.toUShort()
             JumpTarget::class.java -> JumpTarget(
-                ByteBuffer.wrap(parameterBytes).order(ByteOrder.LITTLE_ENDIAN).short.toUShort()
+                ByteBuffer.wrap(parameterBytes).order(ByteOrder.LITTLE_ENDIAN).int.toUInt()
             )
             ByteArray::class.java -> parameterBytes
             else -> error("Unknown parameter type (${parameterDescriptor.type})")
@@ -585,14 +584,14 @@ val outputFiles = if (arg0IsDirectory) {
 for ((inputFile, outputFile) in inputFiles.zip(outputFiles)) {
     println("$inputFile -> $outputFile")
     val instructions = mutableListOf<Instruction>()
-    var currentOffset = 0.US
-    val offsetToIndex = mutableMapOf<UShort, Int>()
+    var currentOffset = 0.U
+    val offsetToIndex = mutableMapOf<UInt, Int>()
     DataInputStream(inputFile.inputStream().buffered()).use { inputStream ->
         while (true) {
             val instruction = parseInstruction(inputStream, charset) ?: break
             offsetToIndex[currentOffset] = instructions.size
             instructions += instruction
-            currentOffset = (currentOffset + instruction.bytes.size.toUShort()).toUShort()
+            currentOffset += instruction.bytes.size.toUInt()
         }
     }
     val jumpTargets = instructions.flatMap { it.parameters.values.filterIsInstance<JumpTarget>() }
