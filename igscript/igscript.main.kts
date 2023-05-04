@@ -1,7 +1,6 @@
 #!/usr/bin/env kotlin
 
 @file:OptIn(ExperimentalUnsignedTypes::class)
-@file:Suppress("OPT_IN_IS_NOT_ENABLED")
 
 import java.io.DataInput
 import java.io.DataInputStream
