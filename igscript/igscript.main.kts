@@ -194,7 +194,7 @@ val instructionDescriptors = listOf(
     InstructionDescriptor(
         "addChoice", 0x1D.UB, 0x08.UB,
         ParameterDescriptor("textLength", 2..2, UByte::class.java),
-        ParameterDescriptor("target", 4..7, JumpTarget::class.java)
+        ParameterDescriptor("target", 4..7, JumpTarget::class.java),
         stringNames = "textLength" to "text"
     ),
     // Only appeared in Ete and Automne and only called for non-virtual ends.
