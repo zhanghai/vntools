@@ -1,5 +1,3 @@
 # vntools
 
-- [igatool](igatool)
-- [igscript](igscript)
-- [pactool](pactool)
+Tools for working with visual novels.
