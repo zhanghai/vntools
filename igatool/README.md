@@ -1,6 +1,6 @@
 # igatool
 
-Tool for extracting and compressing `.iga` files.
+Tool for extracting and compressing `.iga` files from Innocent Grey (mainly for Flowers series).
 
 ## Build
 

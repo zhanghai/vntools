@@ -1,6 +1,6 @@
 # igscript
 
-Tool for decompiling `.s` files.
+Tool for decompiling `.s` scripts from Innocent Grey (mainly for Flowers series).
 
 ## Usage
 
