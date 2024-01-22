@@ -576,6 +576,9 @@ val inputFiles = if (arg0IsDirectory) {
     listOf(arg0File)
 }
 val arg1File = File(args[1])
+if (arg0IsDirectory && !arg1File.exists()) {
+    arg1File.mkdirs()
+}
 val outputFiles = if (arg0IsDirectory) {
     inputFiles.map { arg1File.resolve("${it.nameWithoutExtension}.igs") }
 } else {
