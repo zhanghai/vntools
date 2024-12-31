@@ -490,6 +490,22 @@ class Instruction(
 val instructionCodeToDescriptor = instructionDescriptors.associateBy { it.code }
     .also { require(it.size == instructionDescriptors.size) { "Duplicate instruction code" } }
 
+private val GBK_SPECIAL_CHARS = mapOf(
+    '仈' to '＃',
+    '亹' to '＄',
+    // Since Autumn
+    '傽' to '）',
+    '偂' to '，',
+    '傿' to '！',
+    '偅' to '。',
+    '僁' to '？',
+    '偉' to '、',
+    '僃' to '’',
+    '偋' to '」',
+    '僅' to '”',
+    '偭' to '》',
+)
+
 fun <I> parseInstruction(
     inputStream: I,
     charset: Charset
@@ -551,11 +567,15 @@ fun <I> parseInstruction(
         // - ＃: Speaker name
         // - <>: Hiragana
         // - ＄: New line
-        val stringActualValue = String(stringBytes, 0, stringActualLength, charset)
-        val stringPaddingValue = stringBytes.asSequence().drop(stringActualLength)
-            .joinToString("") { "\\x%02X".format(it) }
-        val stringValue = stringActualValue + stringPaddingValue
-        parameters[stringName] = stringValue
+        val stringActualValue =
+            String(stringBytes, 0, stringActualLength, charset).let {
+                if (charset == GBK) {
+                    it.map { char -> GBK_SPECIAL_CHARS.getOrElse(char) { char } }.joinToString("")
+                } else {
+                    it
+                }
+            }
+        parameters[stringName] = stringActualValue
         stringBytes
     } else {
         null
@@ -568,6 +588,7 @@ val WINDOWS_31J = Charset.forName("windows-31j")
 val GBK = Charset.forName("GBK")
 
 val charset = WINDOWS_31J
+
 val arg0File = File(args[0])
 val arg0IsDirectory = arg0File.isDirectory
 val inputFiles = if (arg0IsDirectory) {
