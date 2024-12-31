@@ -430,28 +430,28 @@ val instructionDescriptors = listOf(
     // Always called before an end is set as completed, but doesn't seem to do anything interesting.
     InstructionDescriptor("0xBA", 0xBA.UB, 0x04.UB),
     InstructionDescriptor(
-        "fadeOutMusic", 0xBB.UB, 0x08.UB,
+        "decreaseMusicVolume", 0xBB.UB, 0x08.UB,
         ParameterDescriptor("volume", 3..3, UByte::class.java) {
             require(it in 0.UB..100.UB) { "volume ($it) !in 0..100" }
         },
         ParameterDescriptor("duration", 4..5, UShort::class.java)
     ),
     InstructionDescriptor(
-        "fadeInMusic", 0xBC.UB, 0x08.UB,
+        "increaseMusicVolume", 0xBC.UB, 0x08.UB,
         ParameterDescriptor("volume", 2..2, UByte::class.java) {
             require(it in 0.UB..100.UB) { "volume ($it) !in 0..100" }
         },
         ParameterDescriptor("duration", 4..5, UShort::class.java)
     ),
     InstructionDescriptor(
-        "fadeOutAllSoundEffects", 0xBD.UB, 0x08.UB,
+        "decreaseAllSoundEffectsVolume", 0xBD.UB, 0x08.UB,
         ParameterDescriptor("volume", 3..3, UByte::class.java) {
             require(it in 0.UB..100.UB) { "volume ($it) !in 0..100" }
         },
         ParameterDescriptor("duration", 4..5, UShort::class.java)
     ),
     InstructionDescriptor(
-        "fadeInAllSoundEffects", 0xBE.UB, 0x08.UB,
+        "increaseAllSoundEffectsVolume", 0xBE.UB, 0x08.UB,
         ParameterDescriptor("volume", 3..3, UByte::class.java) {
             require(it in 0.UB..100.UB) { "volume ($it) !in 0..100" }
         },
