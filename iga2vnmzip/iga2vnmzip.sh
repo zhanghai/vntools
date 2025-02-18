@@ -6,6 +6,26 @@ help() {
     echo 'Usage: iga2vnmzip FLOWERS_DIRECTORY OUTPUT.vnm.zip' >&2
 }
 
+name_to_type() {
+    case "$1" in
+        bgimage)
+            echo background
+            ;;
+        bgm)
+            echo music
+            ;;
+        fgimage)
+            echo foreground
+            ;;
+        se)
+            echo sound
+            ;;
+        *)
+            echo "$1"
+            ;;
+    esac
+}
+
 data_to_name() {
     case "$1" in
         data00)
@@ -44,31 +64,41 @@ main() {
     temp_dir="$(mktemp -d)"
     trap 'rm -rf -- "$temp_dir"' EXIT
 
-    echo "Copying manifest..."
-    cp manifest.yaml "$temp_dir/"
-
     for f in "$1/"*.iga; do
         if [[ "$f" == *data*.iga ]]; then
             continue
         fi
         echo "Extracting $f..."
-        d="$temp_dir/$(basename "$f" .iga)"
+        d="$temp_dir/$(name_to_type "$(basename "$f" .iga)")"
         mkdir "$d"
         ../igatool/igatool -x "$f" "$d"
     done
     if [[ -d "$1/%DEFAULT FOLDER%" ]]; then
         for f in "$1/%DEFAULT FOLDER%/"*.iga; do
             echo "Extracting $f..."
-            d="$temp_dir/$(data_to_name "$(basename "$f" .iga)")"
+            d="$temp_dir/$(name_to_type "$(data_to_name "$(basename "$f" .iga)")")"
             ../igatool/igatool -x "$f" "$d"
         done
     else
         for f in "$1/"data*.iga; do
             echo "Extracting $f..."
-            d="$temp_dir/$(data_to_name "$(basename "$f" .iga)")"
+            d="$temp_dir/$(name_to_type "$(data_to_name "$(basename "$f" .iga)")")"
             ../igatool/igatool -x "$f" "$d"
         done
     fi
+
+    echo "Copying manifest..."
+    cp manifest.yaml "$temp_dir/"
+
+    echo "Copying color backgrounds..."
+    cp '#000000.png' "$temp_dir/background/"
+    cp '#FFFFFF.png' "$temp_dir/background/"
+
+    echo "Moving avatars..."
+    mkdir "$temp_dir/avatar"
+    for f in "$temp_dir/foreground/f"*; do
+        mv "$f" "$temp_dir/avatar/"
+    done
 
     echo "Converting script to VNMark..."
     kotlin ../igs2vnm/igs2vnm.main.kts "$temp_dir/script" "$temp_dir/vnmark"
