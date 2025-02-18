@@ -44,6 +44,9 @@ main() {
     temp_dir="$(mktemp -d)"
     trap 'rm -rf -- "$temp_dir"' EXIT
 
+    echo "Copying manifest..."
+    cp manifest.yaml "$temp_dir/"
+
     for f in "$1/"*.iga; do
         if [[ "$f" == *data*.iga ]]; then
             continue
