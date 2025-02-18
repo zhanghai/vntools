@@ -939,7 +939,7 @@ fun Instruction.toVnMarkLines(state: VnMarkConversionState): List<Line> {
             )
         "playVoice" -> ElementLine("voice", value = getParameter("fileName"))
         "playSoundEffect" -> {
-            val soundElementName = "sound${getParameter<UByte>("index")}"
+            val soundElementName = "sound${getParameter<UByte>("index").toInt() + 1}"
             state.pendingSoundElementNames += soundElementName
             listOf(
                 ElementLine(
@@ -951,7 +951,7 @@ fun Instruction.toVnMarkLines(state: VnMarkConversionState): List<Line> {
             )
         }
         "stopSoundEffect" -> {
-            val soundElementName = "sound${getParameter<UByte>("index")}"
+            val soundElementName = "sound${getParameter<UByte>("index").toInt() + 1}"
             // This may not pass due to jumps or simply invalid script.
             //check(soundElementName in state.pendingSoundElementNames)
             state.pendingSoundElementNames -= soundElementName
@@ -959,7 +959,7 @@ fun Instruction.toVnMarkLines(state: VnMarkConversionState): List<Line> {
         }
         "stopVoice" -> ElementLine("voice", "none")
         "fadeOutSoundEffect" -> {
-            val soundElementName = "sound${getParameter<UByte>("index")}"
+            val soundElementName = "sound${getParameter<UByte>("index").toInt() + 1}"
             // This may not pass due to jumps or simply invalid script.
             //check(soundElementName in state.pendingSoundElementNames)
             state.pendingSoundElementNames += soundElementName
@@ -970,7 +970,7 @@ fun Instruction.toVnMarkLines(state: VnMarkConversionState): List<Line> {
             )
         }
         "playSoundEffectWithFadeIn" -> {
-            val soundElementName = "sound${getParameter<UByte>("index")}"
+            val soundElementName = "sound${getParameter<UByte>("index").toInt() + 1}"
             state.pendingSoundElementNames += soundElementName
             ElementLine(
                 soundElementName,
