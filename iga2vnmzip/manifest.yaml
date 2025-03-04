@@ -3,4 +3,4 @@ name: Flowers
 width: 1280
 height: 720
 density: 1
-entrypoint: vnmark/start
+entrypoint: start

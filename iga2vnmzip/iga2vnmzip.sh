@@ -102,8 +102,7 @@ main() {
 
     echo "Converting script to VNMark..."
     kotlin ../igs2vnm/igs2vnm.main.kts "$temp_dir/script" "$temp_dir/vnmark"
-    # Original script kept for easier debugging.
-    #rm -r "$temp_dir/script"
+    rm -r "$temp_dir/script"
 
     for d in "$temp_dir/"*/; do
         for f in "$d"*.bmp; do
