@@ -1,4 +1,4 @@
-language: zh-CN
+locale: zh-CN
 name: Flowers
 width: 1280
 height: 720
