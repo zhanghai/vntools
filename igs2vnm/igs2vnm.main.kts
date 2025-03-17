@@ -984,11 +984,11 @@ fun Instruction.toVnMarkLines(state: VnMarkConversionState): List<Line> {
         "jumpIfHasCompletedEnds" -> CommentLine(" FIXME: $this")
         "addBacklog" -> ElementLine("text", value = getParameter("text"), comment = toString())
         "setWindowVisible" ->
-            ElementLine("layout", if (getParameter("visible")) "dialogue" else "none")
+            CommandLine("set_layout", if (getParameter("visible")) "dialogue" else "none")
         "clearVerticalMessages" -> CommentLine(" FIXME: $this")
         "fadeWindow" ->
-            ElementLine(
-                "layout",
+            CommandLine(
+                "set_layout",
                 if (getParameter("visible")) "monologue" else "none",
                 // "duration" is ignored here.
                 comment = toString()
@@ -1050,9 +1050,9 @@ fun Instruction.toVnMarkLines(state: VnMarkConversionState): List<Line> {
         "playVideo" ->
             listOf(
                 ElementLine("video", value = getParameter<UByte>("index").toString()),
-                ElementLine("layout", "video"),
+                CommandLine("set_layout", "video"),
                 CommandLine("wait", "video"),
-                ElementLine("layout", "none")
+                CommandLine("layout", "none")
             )
         "playCredits" -> CommentLine(toString())
         "setAvatar" -> ElementLine("avatar", value = getParameter("fileName"))
@@ -1063,7 +1063,7 @@ fun Instruction.toVnMarkLines(state: VnMarkConversionState): List<Line> {
                 2.UB -> "narration"
                 else -> throw IllegalArgumentException("Unknown style $style")
             }
-            ElementLine("layout", layout)
+            CommandLine("set_layout", layout)
         }
         "setChapter" -> CommentLine(toString())
         "decreaseMusicVolume", "increaseMusicVolume" -> {
@@ -1177,12 +1177,12 @@ for ((inputFile, outputFile) in inputFiles.zip(outputFiles)) {
                 width: 1280
                 height: 720
                 blank_line:
-                  - ': wait "name, text, voice"'
-                  - ': snap "name, text, voice"'
+                  - ': wait "name, text"'
+                  - ': snap "name, text"'
                   - ': pause'
                   - 'name: none'
                   - 'text: none'
-                  - ': snap "name, text"'
+                  - ': snap "name, text, voice"'
             """.trimIndent())
         appendLine()
         instructions.forEachIndexed { index, instruction ->
