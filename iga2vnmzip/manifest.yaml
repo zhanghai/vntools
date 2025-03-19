@@ -1,5 +1,6 @@
 locale: zh-CN
 name: Flowers
+template: index
 width: 1280
 height: 720
 density: 1

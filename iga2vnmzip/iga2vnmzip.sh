@@ -20,6 +20,9 @@ name_to_type() {
         se)
             echo sound
             ;;
+        system)
+            echo template
+            ;;
         *)
             echo "$1"
             ;;
@@ -89,6 +92,9 @@ main() {
 
     echo "Copying manifest..."
     cp manifest.yaml "$temp_dir/"
+
+    echo "Copying template..."
+    cp index.html "$temp_dir/template/"
 
     echo "Copying color backgrounds..."
     cp '#000000.png' "$temp_dir/background/"
