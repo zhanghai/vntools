@@ -886,7 +886,8 @@ fun Instruction.toVnMarkLines(state: VnMarkConversionState): List<Line> {
             if (transitionDuration > 1) {
                 imageElementNames.map {
                     ElementLine(it, "transition_duration" to "${transitionDuration}ms")
-                } + CommandLine("wait", imageElementNames.joinToString())
+                } + CommandLine("wait", imageElementNames.joinToString()) +
+                    CommandLine("snap", imageElementNames.joinToString())
             } else {
                 CommandLine("snap", imageElementNames.joinToString())
             }
@@ -1063,6 +1064,7 @@ fun Instruction.toVnMarkLines(state: VnMarkConversionState): List<Line> {
                 ElementLine("video", video),
                 CommandLine("set_layout", "video"),
                 CommandLine("wait", "video"),
+                CommandLine("snap", "video"),
                 CommandLine("set_layout", "none")
             )
         }
