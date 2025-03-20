@@ -477,7 +477,7 @@ class Instruction(
 ) {
     override fun toString(): String =
         "${descriptor.name} (" + parameters.filter { it.key != descriptor.stringNames?.first }
-            .map { "${it.key} = ${parameterValueToString(it.value)}" }.joinToString() +")"
+            .map { "${it.key} = ${parameterValueToString(it.value)}" }.joinToString() + ")"
 
     private fun parameterValueToString(value: Any?): String = when (value) {
         is Boolean -> if (value) "1" else "0"
@@ -572,6 +572,12 @@ fun <I> parseInstruction(
             String(stringBytes, 0, stringActualLength, charset).let {
                 if (charset == GBK) {
                     it.map { char -> GBK_SPECIAL_CHARS.getOrElse(char) { char } }.joinToString("")
+                } else {
+                    it
+                }
+            }.let {
+                if (charset == GBK && stringName == "text") {
+                    it.filter { char -> char != '_' }
                 } else {
                     it
                 }
@@ -1047,13 +1053,19 @@ fun Instruction.toVnMarkLines(state: VnMarkConversionState): List<Line> {
             state.pendingForegroundElementNames += foregroundElementName
             ElementLine(foregroundElementName, value = getParameter("fileName"))
         }
-        "playVideo" ->
+        "playVideo" -> {
+            val video = when (val index = getParameter<UByte>("index")) {
+                0.UB -> "op"
+                1.UB -> "gf"
+                else -> throw IllegalArgumentException("Unknown video $index")
+            }
             listOf(
-                ElementLine("video", value = getParameter<UByte>("index").toString()),
+                ElementLine("video", video),
                 CommandLine("set_layout", "video"),
                 CommandLine("wait", "video"),
-                CommandLine("layout", "none")
+                CommandLine("set_layout", "none")
             )
+        }
         "playCredits" -> CommentLine(toString())
         "setAvatar" -> ElementLine("avatar", value = getParameter("fileName"))
         "setWindowStyle" -> {
