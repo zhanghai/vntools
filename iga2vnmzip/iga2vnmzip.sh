@@ -130,6 +130,14 @@ main() {
             rm "$f"
         done
     done
+    for f in "$temp_dir/video/"*.mpg; do
+        if [[ "$f" == *'*.mpg' ]]; then
+            break
+        fi
+        echo "Converting $f to MP4..."
+        ffmpeg -i "$f" -c:v libx264 -preset slow -tune animation -crf 18 -c:a aac -b:a 128k "${f%.mpg}.mp4"
+        rm "$f"
+    done
 
     output="$(realpath "$2")"
     echo "Creating $output..."
