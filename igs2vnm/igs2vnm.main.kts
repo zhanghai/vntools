@@ -922,15 +922,13 @@ fun Instruction.toVnMarkLines(state: VnMarkConversionState): List<Line> {
         "setVisibleEndCompleted" -> CommentLine(toString())
         "setEndCompleted" -> CommentLine(toString())
         "playMusic" ->
-            listOf(
-                ElementLine(
-                    "music",
-                    value = getParameter("fileName"),
-                    "loop" to getParameter<Boolean>("loop").toString()
-                ),
-                CommandLine("snap", "music")
+            ElementLine(
+                "music",
+                value = getParameter("fileName"),
+                "loop" to getParameter<Boolean>("loop").toString(),
+                "transition_duration" to "0",
             )
-        "stopMusic" -> listOf(ElementLine("music", "none"), CommandLine("snap", "music"))
+        "stopMusic" -> ElementLine("music", "none", "transition_duration" to "0")
         "fadeOutMusic" ->
             ElementLine(
                 "music",
@@ -948,13 +946,11 @@ fun Instruction.toVnMarkLines(state: VnMarkConversionState): List<Line> {
         "playSoundEffect" -> {
             val soundElementName = "sound${getParameter<UByte>("index").toInt() + 1}"
             state.pendingSoundElementNames += soundElementName
-            listOf(
-                ElementLine(
-                    soundElementName,
-                    value = getParameter("fileName"),
-                    "loop" to getParameter<Boolean>("loop").toString()
-                ),
-                CommandLine("snap", soundElementName)
+            ElementLine(
+                soundElementName,
+                value = getParameter("fileName"),
+                "loop" to getParameter<Boolean>("loop").toString(),
+                "transition_duration" to "0",
             )
         }
         "stopSoundEffect" -> {
@@ -962,7 +958,7 @@ fun Instruction.toVnMarkLines(state: VnMarkConversionState): List<Line> {
             // This may not pass due to jumps or simply invalid script.
             //check(soundElementName in state.pendingSoundElementNames)
             state.pendingSoundElementNames -= soundElementName
-            listOf(ElementLine(soundElementName, "none"), CommandLine("snap", soundElementName))
+            ElementLine(soundElementName, "none", "transition_duration" to "0")
         }
         "stopVoice" -> ElementLine("voice", "none")
         "fadeOutSoundEffect" -> {
@@ -1082,31 +1078,14 @@ fun Instruction.toVnMarkLines(state: VnMarkConversionState): List<Line> {
         "setChapter" -> CommentLine(toString())
         "decreaseMusicVolume", "increaseMusicVolume" -> {
             val volume = "${getParameter<UByte>("volume")}%"
-            val duration = getParameter<UShort>("duration").toInt()
-            if (duration > 1) {
-                ElementLine(
-                    "music",
-                    "volume" to volume,
-                    "transition_duration" to "${duration}ms"
-                )
-            } else {
-                listOf(ElementLine("music", "volume" to volume), CommandLine("snap", "music"))
-            }
+            val duration = getParameter<UShort>("duration").toInt().let { if (it > 1) it else 0 }
+            ElementLine("music", "volume" to volume, "transition_duration" to "${duration}ms")
         }
         "decreaseAllSoundEffectsVolume", "increaseAllSoundEffectsVolume" -> {
             val volume = "${getParameter<UByte>("volume")}%"
-            val duration = getParameter<UShort>("duration").toInt()
-            if (duration > 1) {
-                state.pendingSoundElementNames.map {
-                    ElementLine(
-                        it,
-                        "volume" to volume,
-                        "transition_duration" to "${getParameter<UShort>("duration")}ms"
-                    )
-                }
-            } else {
-                state.pendingSoundElementNames.map { ElementLine(it, "volume" to volume) } +
-                    CommandLine("snap", state.pendingSoundElementNames.joinToString())
+            val duration = getParameter<UShort>("duration").toInt().let { if (it > 1) it else 0 }
+            state.pendingSoundElementNames.map {
+                ElementLine(it, "volume" to volume, "transition_duration" to "${duration}ms")
             }
         }
         "playForegroundAnimations" -> {
