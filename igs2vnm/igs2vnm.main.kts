@@ -867,6 +867,7 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
         }
         "loadForeground1" -> {
             val foregroundElementName = "foreground${getParameter<UByte>("index").toInt() + 1}"
+            state.exitingForegroundElementNames -= foregroundElementName
             state.enteringForegroundElementNames += foregroundElementName
             ElementLine(foregroundElementName, value = getParameter("fileName"))
         }
@@ -874,6 +875,7 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
             val foregroundElementName = "foreground${getParameter<UByte>("index").toInt() + 1}"
             // This may not pass due to jumps or simply invalid script.
             //check(foregroundElementName in state.enteringForegroundElementNames)
+            state.exitingForegroundElementNames -= foregroundElementName
             state.enteringForegroundElementNames += foregroundElementName
             val scale = "${getParameter<UByte>("scale")}%"
             ElementLine(
@@ -1018,6 +1020,7 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
             val foregroundElementName = "foreground${getParameter<UByte>("index").toInt() + 1}"
             // This may not pass due to jumps or simply invalid script.
             //check(foregroundElementName in state.enteringForegroundElementNames)
+            state.exitingForegroundElementNames -= foregroundElementName
             state.enteringForegroundElementNames += foregroundElementName
             val properties = listOfNotNull(
                 "anchor_x" to "50%",
@@ -1037,6 +1040,7 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
             val foregroundElementName = "foreground${getParameter<UByte>("index").toInt() + 1}"
             // This may not pass due to jumps or simply invalid script.
             //check(foregroundElementName in state.enteringForegroundElementNames)
+            state.exitingForegroundElementNames -= foregroundElementName
             state.enteringForegroundElementNames += foregroundElementName
             ElementLine(
                 foregroundElementName,
@@ -1063,6 +1067,7 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
         }
         "loadForeground2" -> {
             val foregroundElementName = "foreground${getParameter<UByte>("index").toInt() + 1}"
+            state.exitingForegroundElementNames -= foregroundElementName
             state.enteringForegroundElementNames += foregroundElementName
             ElementLine(foregroundElementName, value = getParameter("fileName"))
         }
