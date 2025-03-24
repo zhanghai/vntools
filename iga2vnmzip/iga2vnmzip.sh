@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 
 help() {
-    echo 'Usage: iga2vnmzip FLOWERS_DIRECTORY OUTPUT.vnm.zip' >&2
+    echo 'Usage: iga2vnmzip FLOWERS_DIRECTORY OUTPUT.vnm.zip|OUTPUT_DIRECTORY/' >&2
 }
 
 name_to_type() {
@@ -54,7 +54,7 @@ data_to_name() {
 }
 
 main() {
-    if [[ $# -ne 2 || ! -d "$1" || "$2" != *.vnm.zip ]]; then
+    if [[ $# -ne 2 || ! -d "$1" || ! ( "$2" == */ || "$2" == *.vnm.zip ) ]]; then
         help
         exit 1
     fi
@@ -64,53 +64,61 @@ main() {
         exit 1
     fi
 
-    temp_dir="$(mktemp -d)"
-    trap 'rm -rf -- "$temp_dir"' EXIT
+    [[ "$2" == *.vnm.zip ]] && is_zip=true || is_zip=false
+
+    local output_dir
+    if [[ "$is_zip" == true ]]; then
+        output_dir="$(mktemp -d)"
+        trap 'rm -rf -- "$output_dir"' EXIT
+    else
+        output_dir="${2%/}"
+        mkdir -p "$output_dir"
+    fi
 
     for f in "$1/"*.iga; do
         if [[ "$f" == *data*.iga ]]; then
             continue
         fi
         echo "Extracting $f..."
-        d="$temp_dir/$(name_to_type "$(basename "$f" .iga)")"
+        d="$output_dir/$(name_to_type "$(basename "$f" .iga)")"
         mkdir "$d"
         ../igatool/igatool -x "$f" "$d"
     done
     if [[ -d "$1/%DEFAULT FOLDER%" ]]; then
         for f in "$1/%DEFAULT FOLDER%/"*.iga; do
             echo "Extracting $f..."
-            d="$temp_dir/$(name_to_type "$(data_to_name "$(basename "$f" .iga)")")"
+            d="$output_dir/$(name_to_type "$(data_to_name "$(basename "$f" .iga)")")"
             ../igatool/igatool -x "$f" "$d"
         done
     else
         for f in "$1/"data*.iga; do
             echo "Extracting $f..."
-            d="$temp_dir/$(name_to_type "$(data_to_name "$(basename "$f" .iga)")")"
+            d="$output_dir/$(name_to_type "$(data_to_name "$(basename "$f" .iga)")")"
             ../igatool/igatool -x "$f" "$d"
         done
     fi
 
     echo "Copying manifest..."
-    cp manifest.yaml "$temp_dir/"
+    cp manifest.yaml "$output_dir/"
 
     echo "Copying template..."
-    cp index.html "$temp_dir/template/"
+    cp index.html "$output_dir/template/"
 
     echo "Copying color backgrounds..."
-    cp '#000000.png' "$temp_dir/background/"
-    cp '#FFFFFF.png' "$temp_dir/background/"
+    cp '#000000.png' "$output_dir/background/"
+    cp '#FFFFFF.png' "$output_dir/background/"
 
     echo "Moving avatars..."
-    mkdir "$temp_dir/avatar"
-    for f in "$temp_dir/foreground/f"*; do
-        mv "$f" "$temp_dir/avatar/"
+    mkdir "$output_dir/avatar"
+    for f in "$output_dir/foreground/f"*; do
+        mv "$f" "$output_dir/avatar/"
     done
 
     echo "Converting script to VNMark..."
-    kotlin ../igs2vnm/igs2vnm.main.kts "$temp_dir/script" "$temp_dir/vnmark"
-    rm -r "$temp_dir/script"
+    kotlin ../igs2vnm/igs2vnm.main.kts "$output_dir/script" "$output_dir/vnmark"
+    rm -r "$output_dir/script"
 
-    for d in "$temp_dir/"*/; do
+    for d in "$output_dir/"*/; do
         for f in "$d"*.bmp; do
             if [[ "$f" == *'*.bmp' ]]; then
                 break
@@ -120,7 +128,7 @@ main() {
             rm "$f"
         done
     done
-    for d in "$temp_dir/"*/; do
+    for d in "$output_dir/"*/; do
         for f in "$d"*.png; do
             if [[ "$f" == *'*.png' ]]; then
                 break
@@ -130,7 +138,7 @@ main() {
             rm "$f"
         done
     done
-    for f in "$temp_dir/video/"*.mpg; do
+    for f in "$output_dir/video/"*.mpg; do
         if [[ "$f" == *'*.mpg' ]]; then
             break
         fi
@@ -139,10 +147,12 @@ main() {
         rm "$f"
     done
 
-    output="$(realpath "$2")"
-    echo "Creating $output..."
-    rm -f "$output"
-    (cd "$temp_dir"; zip -0DrX "$output" .)
+    if [[ "$is_zip" == true ]]; then
+        output="$(realpath "$2")"
+        echo "Creating $output..."
+        rm -f "$output"
+        (cd "$output_dir"; zip -0DrX "$output" .)
+    fi
 }
 
 main "$@"
