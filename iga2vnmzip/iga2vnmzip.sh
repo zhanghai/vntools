@@ -114,6 +114,11 @@ main() {
         mv "$f" "$output_dir/avatar/"
     done
 
+    echo "Moving template sounds..."
+    for f in "$output_dir/sound/sys_"*; do
+        mv "$f" "$output_dir/template/"
+    done
+
     echo "Converting script to VNMark..."
     kotlin ../igs2vnm/igs2vnm.main.kts "$output_dir/script" "$output_dir/vnmark"
     rm -r "$output_dir/script"

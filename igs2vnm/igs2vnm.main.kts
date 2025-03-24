@@ -921,7 +921,11 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
             val choiceJumpTargets = state.pendingChoiceJumpTargets.toList()
             state.pendingChoiceJumpTargets.clear()
             check(choiceJumpTargets.isNotEmpty())
-            listOf(CommandLine("pause")) +
+            listOf(CommandLine("wait", "choice*"), CommandLine("pause")) +
+                List(choiceJumpTargets.size) { index ->
+                    ElementLine("choice${index + 1}", "none")
+                } +
+                CommandLine("wait", "choice*") +
                 choiceJumpTargets.mapIndexed { index, jumpTarget ->
                     CommandLine("jump_if", jumpTarget.toString(), "$['choice'] === ${index + 1}")
                 }
@@ -1079,10 +1083,9 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
             }
             listOf(
                 ElementLine("video", video),
-                CommandLine("set_layout", "video"),
                 CommandLine("wait", "video"),
                 CommandLine("snap", "video"),
-                CommandLine("set_layout", "none")
+                ElementLine("video", "none"),
             )
         }
         "playCredits" -> CommentLine(toString())
