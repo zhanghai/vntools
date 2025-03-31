@@ -844,7 +844,7 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
             )
         "setMessageIndex" -> CommentLine(toString())
         "jump" -> CommandLine("jump", getParameter<JumpTarget>("target").toString())
-        "wait" -> CommandLine("sleep", getParameter<UShort>("duration").toString())
+        "wait" -> CommandLine("delay", getParameter<UShort>("duration").toString())
         "setBackground" -> ElementLine("background", value = getParameter("fileName"))
         "setBackgroundAndClearForegroundsAndAvatar" -> {
             val foregroundAvatarElementNames =
