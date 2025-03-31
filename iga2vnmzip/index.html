@@ -101,6 +101,13 @@
         left: 229px;
         top: 264px;
       }
+      div[data-type="choice"] > button:nth-of-type(3) {
+        left: 326px;
+        top: 342px;
+      }
+      div[data-type="choice"] > button:focus-visible {
+        outline: none;
+      }
       div[data-type="choice"] > button:disabled {
         color: #808080;
       }
@@ -115,14 +122,16 @@
           visibility 0ms 100ms;
       }
       div[data-type="choice"]
-        > button:not(:hover)
+        > button:not(:hover, :focus-visible)
         *:not(audio)[data-class="not-hover"],
-      div[data-type="choice"] > button:hover *:not(audio)[data-class="hover"],
       div[data-type="choice"]
-        > button.visited:not(:hover)
+        > button:is(:hover, :focus-visible)
+        *:not(audio)[data-class="hover"],
+      div[data-type="choice"]
+        > button.visited:not(:hover, :focus-visible)
         *:not(audio)[data-class~="not-hover"][data-class~="visited"],
       div[data-type="choice"]
-        > button.visited:hover
+        > button.visited:is(:hover, :focus-visible)
         *:not(audio)[data-class~="hover"][data-class~="visited"] {
         opacity: 1;
         visibility: visible;
