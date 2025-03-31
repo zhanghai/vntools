@@ -74,10 +74,7 @@
       "
     ></div>
   </div>
-  <div
-    data-id="pointer"
-    style="position: absolute; inset: 0"
-  ></div>
+  <div data-id="pointer" style="position: absolute; inset: 0"></div>
   <div
     data-type="choice"
     style="
@@ -115,28 +112,21 @@
       }
       div[data-type="choice"] > button *:not(audio)[data-class] {
         opacity: 0;
-        visibility: hidden;
-        transition:
-          opacity 100ms linear,
-          visibility 0ms 100ms;
+        transition: opacity 100ms linear;
       }
       div[data-type="choice"]
-        > button:not(:hover, :focus-visible)
-        *:not(audio)[data-class="not-hover"],
+        > button:is(:disabled, :not(:hover, :focus-visible, .selected))
+        *:not(audio)[data-class="inactive"],
       div[data-type="choice"]
-        > button:is(:hover, :focus-visible)
-        *:not(audio)[data-class="hover"],
+        > button:not(:disabled):is(:hover, :focus-visible, .selected)
+        *:not(audio)[data-class="active"],
       div[data-type="choice"]
-        > button.visited:not(:hover, :focus-visible)
-        *:not(audio)[data-class~="not-hover"][data-class~="visited"],
+        > button:is(:disabled, :not(:hover, :focus-visible, .selected)).visited
+        *:not(audio)[data-class~="inactive-visited"],
       div[data-type="choice"]
-        > button.visited:is(:hover, :focus-visible)
-        *:not(audio)[data-class~="hover"][data-class~="visited"] {
+        > button:not(:disabled):is(:hover, :focus-visible, .selected).visited
+        *:not(audio)[data-class~="active-visited"] {
         opacity: 1;
-        visibility: visible;
-        transition:
-          opacity 100ms linear,
-          visibility 0ms;
       }
     </style>
   </div>
@@ -171,7 +161,7 @@
         <img
           alt=""
           src=""
-          data-class="not-hover"
+          data-class="inactive"
           data-src="select_p"
           style="
             position: absolute;
@@ -184,7 +174,7 @@
         <img
           alt=""
           src=""
-          data-class="hover"
+          data-class="active"
           data-src="select_p"
           style="
             position: absolute;
@@ -208,7 +198,7 @@
         <img
           alt=""
           src=""
-          data-class="not-hover visited"
+          data-class="inactive-visited"
           data-src="select_p"
           style="
             position: absolute;
@@ -221,7 +211,7 @@
         <img
           alt=""
           src=""
-          data-class="hover visited"
+          data-class="active-visited"
           data-src="select_p"
           style="
             position: absolute;
