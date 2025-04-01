@@ -8,24 +8,35 @@
     user-select: none;
   "
 >
-  <div data-type="background" style="position: absolute; inset: 0"></div>
-  <div data-type="figure" style="position: absolute; inset: 0"></div>
-  <div data-type="foreground" style="position: absolute; inset: 0"></div>
-  <div data-type="video" style="position: absolute; inset: 0"></div>
+  <div data-id="effect" style="position: absolute; inset: 0">
+    <div data-type="background" style="position: absolute; inset: 0"></div>
+    <div data-type="figure" style="position: absolute; inset: 0"></div>
+    <div data-type="foreground" style="position: absolute; inset: 0"></div>
+    <div data-type="video" style="position: absolute; inset: 0"></div>
+    <div data-layout="dialogue" style="position: absolute; inset: 0">
+      <div
+        style="
+          position: absolute;
+          left: 63px;
+          top: 541px;
+          width: 1149px;
+          height: 156px;
+          background-color: rgba(255, 255, 255, 0.6);
+        "
+      ></div>
+      <div
+        data-position-x="65"
+        data-position-y="543"
+        data-type="avatar"
+        style="position: absolute; inset: 0"
+      ></div>
+    </div>
+  </div>
+  <div data-id="effect-overlay" style="position: absolute; inset: 0"></div>
   <div
     data-layout="dialogue"
     style="position: absolute; inset: 0; font-size: 26px; line-height: 1.5"
   >
-    <div
-      style="
-        position: absolute;
-        left: 63px;
-        top: 541px;
-        width: 1149px;
-        height: 156px;
-        background-color: rgba(255, 255, 255, 0.6);
-      "
-    ></div>
     <img
       alt=""
       src=""
@@ -46,12 +57,6 @@
         width: 1280px;
         height: 300px;
       "
-    ></div>
-    <div
-      data-position-x="65"
-      data-position-y="543"
-      data-type="avatar"
-      style="position: absolute; inset: 0"
     ></div>
     <div
       data-type="name"

@@ -897,10 +897,17 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
             state.exitingForegroundElementNames.clear()
             val transitionDuration = getParameter<UShort>("transitionDuration").toInt()
             if (transitionDuration > 1) {
-                imageElementNames.map {
-                    ElementLine(it, "transition_duration" to "${transitionDuration}ms")
-                } + CommandLine("wait", imageElementNames.joinToString()) +
-                    CommandLine("snap", imageElementNames.joinToString())
+                listOf(
+                    ElementLine(
+                        "effect",
+                        "cross-fade",
+                        "transition_duration" to "${transitionDuration}ms",
+                    ),
+                    CommandLine("snap", imageElementNames.joinToString()),
+                    CommandLine("wait", "effect"),
+                    ElementLine("effect", "none"),
+                    CommandLine("snap", "effect"),
+                )
             } else {
                 CommandLine("snap", imageElementNames.joinToString())
             }
