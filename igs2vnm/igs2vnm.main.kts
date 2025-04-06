@@ -595,22 +595,6 @@ class Comment(val value: String) {
     override fun toString(): String = "#$value"
 }
 
-class Name(val value: String) {
-    init {
-        require(value.isNotEmpty()) { "Invalid empty name" }
-        require(value[0] in 'A'..'Z' || value[0] in 'a'..'z' || value[0] == '_') {
-            "Invalid first character '${value[0]}' in name \"$value\""
-        }
-        for (char in value) {
-            require(char in 'A'..'Z' || char in 'a'..'z' || char in '0'..'9' || char == '_') {
-                "Invalid character '$char' in name \"$value\""
-            }
-        }
-    }
-
-    override fun toString(): String = value
-}
-
 sealed interface Value {
     companion object
 }
@@ -671,7 +655,7 @@ private fun escapeValue(value: String, quotationChar: Char): String = buildStrin
 }
 
 class Property(
-    val name: Name?,
+    val name: Value?,
     val value: Value
 ) {
     override fun toString(): String = if (name != null) "$name = $value" else value.toString()
@@ -680,7 +664,7 @@ class Property(
 }
 
 fun Property.Companion.from(name: String?, value: String): Property =
-    Property(name?.let { Name(it) }, Value.from(value))
+    Property(name?.let { Value.from(it) }, Value.from(value))
 
 sealed interface Line {
     val comment: Comment?
@@ -699,7 +683,7 @@ class CommentLine(override val comment: Comment) : Line {
 fun CommentLine(comment: String) : CommentLine = CommentLine(Comment(comment))
 
 class CommandLine(
-    val name: Name,
+    val name: Value,
     val arguments: List<Value>,
     override val comment: Comment?
 ) : Line {
@@ -713,10 +697,10 @@ fun CommandLine(
     vararg arguments: String,
     comment: String? = null
 ): CommandLine =
-    CommandLine(Name(name), arguments.map { Value.from(it) }, comment?.let { Comment(it) })
+    CommandLine(Value.from(name), arguments.map { Value.from(it) }, comment?.let { Comment(it) })
 
 class ElementLine(
-    val name: Name,
+    val name: Value,
     val properties: List<Property>,
     override val comment: Comment?
 ) : Line {
@@ -743,7 +727,7 @@ fun ElementLine(
     comment: String? = null
 ): ElementLine =
     ElementLine(
-        Name(name),
+        Value.from(name),
         (value?.let { listOf(Property.from(null, value)) } ?: emptyList()) +
             properties.map { (name, value) -> Property.from(name, value) },
         comment?.let { Comment(it) }
@@ -795,11 +779,7 @@ private fun Comment?.toStringWithPrecedingSpaceOrEmpty(): String =
     if (this != null) " $this" else ""
 
 class VnmarkConversionState {
-    val enteringForegroundElementNames = mutableSetOf<String>()
-    val exitingForegroundElementNames = mutableSetOf<String>()
-    val currentForegroundElementNames = mutableSetOf<String>()
     val pendingChoiceJumpTargets = mutableListOf<JumpTarget>()
-    val pendingSoundElementNames = mutableSetOf<String>()
 }
 
 fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
@@ -847,36 +827,20 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
         "wait" -> CommandLine("delay", getParameter<UShort>("duration").toString())
         "setBackground" -> ElementLine("background", value = getParameter("fileName"))
         "setBackgroundAndClearForegroundsAndAvatar" -> {
-            val foregroundAvatarElementNames =
-                state.currentForegroundElementNames + state.enteringForegroundElementNames +
-                    "avatar"
-            state.exitingForegroundElementNames += state.currentForegroundElementNames
-            state.exitingForegroundElementNames += state.enteringForegroundElementNames
-            state.enteringForegroundElementNames.clear()
-            listOf(ElementLine("background", value = getParameter("fileName"))) +
-                foregroundAvatarElementNames.map { ElementLine(it, "none") }
+            listOf(
+                ElementLine("background", value = getParameter("fileName")),
+                ElementLine("foreground*", "none"),
+                ElementLine("avatar", "none"),
+            )
         }
-        "clearForegroundsAndAvatar" -> {
-            val foregroundAvatarElementNames =
-                state.currentForegroundElementNames + state.enteringForegroundElementNames +
-                    "avatar"
-            state.exitingForegroundElementNames += state.currentForegroundElementNames
-            state.exitingForegroundElementNames += state.enteringForegroundElementNames
-            state.enteringForegroundElementNames.clear()
-            foregroundAvatarElementNames.map { ElementLine(it, "none") }
-        }
+        "clearForegroundsAndAvatar" ->
+            listOf(ElementLine("foreground*", "none"), ElementLine("avatar", "none"))
         "loadForeground1" -> {
             val foregroundElementName = "foreground${getParameter<UByte>("index").toInt() + 1}"
-            state.exitingForegroundElementNames -= foregroundElementName
-            state.enteringForegroundElementNames += foregroundElementName
             ElementLine(foregroundElementName, value = getParameter("fileName"))
         }
         "setForeground" -> {
             val foregroundElementName = "foreground${getParameter<UByte>("index").toInt() + 1}"
-            // This may not pass due to jumps or simply invalid script.
-            //check(foregroundElementName in state.enteringForegroundElementNames)
-            state.exitingForegroundElementNames -= foregroundElementName
-            state.enteringForegroundElementNames += foregroundElementName
             val scale = "${getParameter<UByte>("scale")}%"
             ElementLine(
                 foregroundElementName,
@@ -888,13 +852,6 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
             )
         }
         "showImages" -> {
-            val foregroundElementNames =
-                state.enteringForegroundElementNames + state.exitingForegroundElementNames
-            val imageElementNames = listOf("background") + foregroundElementNames + "avatar"
-            state.currentForegroundElementNames += state.enteringForegroundElementNames
-            state.enteringForegroundElementNames.clear()
-            state.currentForegroundElementNames -= state.exitingForegroundElementNames
-            state.exitingForegroundElementNames.clear()
             val transitionDuration = getParameter<UShort>("transitionDuration").toInt()
             if (transitionDuration > 1) {
                 listOf(
@@ -903,36 +860,34 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
                         "cross-fade",
                         "transition_duration" to "${transitionDuration}ms",
                     ),
-                    CommandLine("snap", imageElementNames.joinToString()),
+                    CommandLine("snap", "background", "foreground*", "avatar"),
                     CommandLine("wait", "effect"),
                     ElementLine("effect", "none"),
                     CommandLine("snap", "effect"),
                 )
             } else {
-                CommandLine("snap", imageElementNames.joinToString())
+                CommandLine("snap", "background", "foreground*", "avatar")
             }
         }
         "setBackgroundColorAndClearForegroundsAndAvatar" -> {
             @OptIn(ExperimentalStdlibApi::class)
             val color = "#" + getParameter<ByteArray>("color").toHexString(HexFormat.UpperCase)
-            val foregroundAvatarElementNames =
-                state.currentForegroundElementNames + state.enteringForegroundElementNames +
-                    "avatar"
-            state.exitingForegroundElementNames += state.currentForegroundElementNames
-            state.exitingForegroundElementNames += state.enteringForegroundElementNames
-            state.enteringForegroundElementNames.clear()
-            listOf(ElementLine("background", color)) +
-                foregroundAvatarElementNames.map { ElementLine(it, "none") }
+            listOf(
+                ElementLine("background", color),
+                ElementLine("foreground*", "none"),
+                ElementLine("avatar", "none"),
+            )
         }
         "endAndShowChoices" -> {
             val choiceJumpTargets = state.pendingChoiceJumpTargets.toList()
             state.pendingChoiceJumpTargets.clear()
             check(choiceJumpTargets.isNotEmpty())
-            listOf(CommandLine("wait", "choice*"), CommandLine("pause")) +
-                List(choiceJumpTargets.size) { index ->
-                    ElementLine("choice${index + 1}", "none")
-                } +
-                CommandLine("wait", "choice*") +
+            listOf(
+                CommandLine("wait", "choice*"),
+                CommandLine("pause"),
+                ElementLine("choice*", "none"),
+                CommandLine("wait", "choice*"),
+            ) +
                 choiceJumpTargets.mapIndexed { index, jumpTarget ->
                     CommandLine("jump_if", jumpTarget.toString(), "$['choice'] === ${index + 1}")
                 }
@@ -973,7 +928,6 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
         "playVoice" -> ElementLine("voice", value = getParameter("fileName"))
         "playSoundEffect" -> {
             val soundElementName = "sound${getParameter<UByte>("index").toInt() + 1}"
-            state.pendingSoundElementNames += soundElementName
             ElementLine(
                 soundElementName,
                 value = getParameter("fileName"),
@@ -983,17 +937,11 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
         }
         "stopSoundEffect" -> {
             val soundElementName = "sound${getParameter<UByte>("index").toInt() + 1}"
-            // This may not pass due to jumps or simply invalid script.
-            //check(soundElementName in state.pendingSoundElementNames)
-            state.pendingSoundElementNames -= soundElementName
             ElementLine(soundElementName, "none", "transition_duration" to "0")
         }
         "stopVoice" -> ElementLine("voice", "none")
         "fadeOutSoundEffect" -> {
             val soundElementName = "sound${getParameter<UByte>("index").toInt() + 1}"
-            // This may not pass due to jumps or simply invalid script.
-            //check(soundElementName in state.pendingSoundElementNames)
-            state.pendingSoundElementNames += soundElementName
             ElementLine(
                 soundElementName,
                 "volume" to "0%",
@@ -1002,7 +950,6 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
         }
         "playSoundEffectWithFadeIn" -> {
             val soundElementName = "sound${getParameter<UByte>("index").toInt() + 1}"
-            state.pendingSoundElementNames += soundElementName
             ElementLine(
                 soundElementName,
                 value = getParameter("fileName"),
@@ -1029,10 +976,6 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
         "waitForClick" -> CommandLine("pause", comment = toString())
         "setForegroundAnimationStart" -> {
             val foregroundElementName = "foreground${getParameter<UByte>("index").toInt() + 1}"
-            // This may not pass due to jumps or simply invalid script.
-            //check(foregroundElementName in state.enteringForegroundElementNames)
-            state.exitingForegroundElementNames -= foregroundElementName
-            state.enteringForegroundElementNames += foregroundElementName
             val properties = listOfNotNull(
                 "anchor_x" to "50%",
                 "position_x" to "${getParameter<Short>("centerX")}px",
@@ -1049,10 +992,6 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
         }
         "setForegroundAnimationEnd" -> {
             val foregroundElementName = "foreground${getParameter<UByte>("index").toInt() + 1}"
-            // This may not pass due to jumps or simply invalid script.
-            //check(foregroundElementName in state.enteringForegroundElementNames)
-            state.exitingForegroundElementNames -= foregroundElementName
-            state.enteringForegroundElementNames += foregroundElementName
             ElementLine(
                 foregroundElementName,
                 "anchor_x" to "50%",
@@ -1065,8 +1004,6 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
             )
         }
         "playAllForegroundAnimations" -> {
-            state.currentForegroundElementNames += state.enteringForegroundElementNames
-            state.enteringForegroundElementNames.clear()
             // Followed by wait so no need to do anything here.
             null
         }
@@ -1078,8 +1015,6 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
         }
         "loadForeground2" -> {
             val foregroundElementName = "foreground${getParameter<UByte>("index").toInt() + 1}"
-            state.exitingForegroundElementNames -= foregroundElementName
-            state.enteringForegroundElementNames += foregroundElementName
             ElementLine(foregroundElementName, value = getParameter("fileName"))
         }
         "playVideo" -> {
@@ -1115,18 +1050,13 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
         "decreaseAllSoundEffectsVolume", "increaseAllSoundEffectsVolume" -> {
             val volume = "${getParameter<UByte>("volume")}%"
             val duration = getParameter<UShort>("duration").toInt().let { if (it > 1) it else 0 }
-            state.pendingSoundElementNames.map {
-                ElementLine(it, "volume" to volume, "transition_duration" to "${duration}ms")
-            }
+            ElementLine("sound*", "volume" to volume, "transition_duration" to "${duration}ms")
         }
         "playForegroundAnimations" -> {
-            state.currentForegroundElementNames += state.enteringForegroundElementNames
-            state.enteringForegroundElementNames.clear()
             // Followed by wait so no need to do anything here.
             null
         }
-        "stopForegroundAnimations" ->
-            CommandLine("snap", state.currentForegroundElementNames.joinToString())
+        "stopForegroundAnimations" -> CommandLine("snap", "foreground*")
         else -> CommentLine(" FIXME: $this")
     }
     return when (lineOrLines) {
@@ -1203,12 +1133,12 @@ for ((inputFile, outputFile) in inputFiles.zip(outputFiles)) {
                 width: 1280
                 height: 720
                 blank_line:
-                  - ': wait "name, text"'
-                  - ': snap "name, text"'
+                  - ': wait name, text'
+                  - ': snap name, text'
                   - ': pause'
                   - 'name: none'
                   - 'text: none'
-                  - ': snap "name, text, voice"'
+                  - ': snap name, text, voice'
             """.trimIndent())
         appendLine()
         instructions.forEachIndexed { index, instruction ->
