@@ -779,17 +779,38 @@ private fun Comment?.toStringWithPrecedingSpaceOrEmpty(): String =
     if (this != null) " $this" else ""
 
 class VnmarkConversionState {
+    var pendingClearMessage = false
+    var pendingClearMessageSkipName = false
     val pendingChoiceJumpTargets = mutableListOf<JumpTarget>()
 }
 
 fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
+    val clearMessageIfPendingLines = if (state.pendingClearMessage) {
+        if (state.pendingClearMessageSkipName) {
+            listOf(
+                ElementLine("text", "none"),
+                CommandLine("snap", "text"),
+            )
+        } else {
+            listOf(
+                ElementLine("name", "none"),
+                ElementLine("text", "none"),
+                CommandLine("snap", "name", "text"),
+            )
+        }
+    } else {
+        emptyList()
+    }
     val lineOrLines: Any? = when (descriptor.name) {
         "showMessage" -> {
             val text = getParameter<String>("text")
             if (text.startsWith('＃')) {
+                state.pendingClearMessageSkipName = true
                 ElementLine("name", text.substring(1))
             } else {
-                listOf(ElementLine("text", value = text), BlankLine())
+                state.pendingClearMessage = true
+                state.pendingClearMessageSkipName = false
+                clearMessageIfPendingLines + listOf(ElementLine("text", value = text), BlankLine())
             }
         }
         "exitScript" -> CommandLine("exit")
@@ -853,8 +874,10 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
         }
         "showImages" -> {
             val transitionDuration = getParameter<UShort>("transitionDuration").toInt()
+            state.pendingClearMessage = false
+            state.pendingClearMessageSkipName = false
             if (transitionDuration > 1) {
-                listOf(
+                clearMessageIfPendingLines + listOf(
                     ElementLine(
                         "effect",
                         "cross-fade",
@@ -866,7 +889,8 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
                     CommandLine("snap", "effect"),
                 )
             } else {
-                CommandLine("snap", "background", "foreground*", "avatar")
+                clearMessageIfPendingLines +
+                    CommandLine("snap", "background", "foreground*", "avatar")
             }
         }
         "setBackgroundColorAndClearForegroundsAndAvatar" -> {
@@ -882,12 +906,14 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
             val choiceJumpTargets = state.pendingChoiceJumpTargets.toList()
             state.pendingChoiceJumpTargets.clear()
             check(choiceJumpTargets.isNotEmpty())
+            state.pendingClearMessage = false
+            state.pendingClearMessageSkipName = false
             listOf(
                 CommandLine("wait", "choice*"),
                 CommandLine("pause"),
                 ElementLine("choice*", "none"),
                 CommandLine("wait", "choice*"),
-            ) +
+            ) + clearMessageIfPendingLines +
                 choiceJumpTargets.mapIndexed { index, jumpTarget ->
                     CommandLine("jump_if", jumpTarget.toString(), "$['choice'] === ${index + 1}")
                 }
@@ -1004,8 +1030,10 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
             )
         }
         "playAllForegroundAnimations" -> {
-            // Followed by wait so no need to do anything here.
-            null
+            state.pendingClearMessage = false
+            state.pendingClearMessageSkipName = false
+            // Followed by wait
+            clearMessageIfPendingLines
         }
         "stopForegroundAnimation" -> {
             val foregroundElementName = "foreground${getParameter<UByte>("index").toInt() + 1}"
@@ -1023,7 +1051,9 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
                 1.UB -> "gf"
                 else -> throw IllegalArgumentException("Unknown video $index")
             }
-            listOf(
+            state.pendingClearMessage = false
+            state.pendingClearMessageSkipName = false
+            clearMessageIfPendingLines + listOf(
                 ElementLine("video", video),
                 CommandLine("wait", "video"),
                 CommandLine("snap", "video"),
@@ -1053,8 +1083,10 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
             ElementLine("sound*", "volume" to volume, "transition_duration" to "${duration}ms")
         }
         "playForegroundAnimations" -> {
-            // Followed by wait so no need to do anything here.
-            null
+            state.pendingClearMessage = false
+            state.pendingClearMessageSkipName = false
+            // Followed by wait
+            clearMessageIfPendingLines
         }
         "stopForegroundAnimations" -> CommandLine("snap", "foreground*")
         else -> CommentLine(" FIXME: $this")
@@ -1136,9 +1168,7 @@ for ((inputFile, outputFile) in inputFiles.zip(outputFiles)) {
                   - ': wait name, text'
                   - ': snap name, text'
                   - ': pause'
-                  - 'name: none'
-                  - 'text: none'
-                  - ': snap name, text, voice'
+                  - ': snap voice'
             """.trimIndent())
         appendLine()
         instructions.forEachIndexed { index, instruction ->
