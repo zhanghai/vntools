@@ -49,15 +49,80 @@
         height: 300px;
       "
     />
+    <style>
+      @keyframes fade-in-out {
+        from {
+          opacity: 0;
+        }
+        50% {
+          opacity: 1;
+        }
+        to {
+          opacity: 0;
+        }
+      }
+    </style>
     <div
       style="
         position: absolute;
-        left: 0;
-        top: 420px;
-        width: 1280px;
-        height: 300px;
+        left: 1134px;
+        top: 425px;
+        width: 120px;
+        height: 120px;
+        overflow: hidden;
       "
-    ></div>
+    >
+      <img
+        alt=""
+        src=""
+        data-src="q_save_menu"
+        data-script-animate="
+          const previousYuriUpValue = $['previousYuriUpValue'] ?? 128;
+          const currentYuriValue = $['100'] ?? 128;
+          $['previousYuriUpValue'] = currentYuriValue;
+          if (currentYuriValue > previousYuriUpValue) {
+            [{opacity: [0, 1, 0]}, 1000];
+          }
+        "
+        style="position: absolute; left: 0; top: -50px; opacity: 0"
+      />
+      <img
+        alt=""
+        src=""
+        data-src="q_save_menu"
+        data-script-animate="
+          const previousYuriDownValue = $['previousYuriDownValue'] ?? 128;
+          const currentYuriValue = $['100'] ?? 128;
+          $['previousYuriDownValue'] = currentYuriValue;
+          if (currentYuriValue < previousYuriDownValue) {
+            [{opacity: [0, 1, 0]}, 1000];
+          }
+        "
+        style="position: absolute; left: -120px; top: -50px; opacity: 0"
+      />
+    </div>
+    <div
+      style="
+        position: absolute;
+        left: 1156px;
+        top: 434px;
+        width: 84px;
+        height: 104px;
+        overflow: hidden;
+      "
+    >
+      <img
+        alt=""
+        src=""
+        data-src="lily_gauge"
+        data-script-style="
+          const lilyLevel =
+            Math.max(0, Math.min(Math.floor((($['100'] ?? 128) - 128) / 16) + 4, 8));
+          `position: absolute; left: 0; top: ${lilyLevel * -104}px`;
+        "
+        style="position: absolute; left: 0; top: -416px"
+      />
+    </div>
     <div
       data-type="name"
       style="
