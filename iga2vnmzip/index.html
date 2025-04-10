@@ -4,7 +4,7 @@
     width: 1280px;
     height: 720px;
     color: black;
-    font-family: serif;
+    font-family: 'Noto Serif CJK SC', serif;
     user-select: none;
   "
 >
@@ -84,7 +84,14 @@
             [{opacity: [0, 1, 0]}, 1000];
           }
         "
-        style="position: absolute; left: 0; top: -50px; opacity: 0"
+        style="
+          position: absolute;
+          left: 0;
+          top: -50px;
+          width: 520px;
+          height: 380px;
+          opacity: 0;
+        "
       />
       <img
         alt=""
@@ -98,7 +105,14 @@
             [{opacity: [0, 1, 0]}, 1000];
           }
         "
-        style="position: absolute; left: -120px; top: -50px; opacity: 0"
+        style="
+          position: absolute;
+          left: -120px;
+          top: -50px;
+          width: 520px;
+          height: 380px;
+          opacity: 0;
+        "
       />
     </div>
     <div
@@ -118,9 +132,15 @@
         data-script-style="
           const lilyLevel =
             Math.max(0, Math.min(Math.floor((($['100'] ?? 128) - 128) / 16) + 4, 8));
-          `position: absolute; left: 0; top: ${lilyLevel * -104}px`;
+          `position: absolute; left: 0; top: ${lilyLevel * -104}px; width: 84px; height: 936px`;
         "
-        style="position: absolute; left: 0; top: -416px"
+        style="
+          position: absolute;
+          left: 0;
+          top: -416px;
+          width: 84px;
+          height: 936px;
+        "
       />
     </div>
     <div
@@ -253,6 +273,8 @@
             position: absolute;
             left: 0;
             top: 0;
+            width: 908px;
+            height: 220px;
             mix-blend-mode: plus-lighter;
           "
         />
@@ -266,6 +288,8 @@
             position: absolute;
             left: 0;
             top: -74px;
+            width: 908px;
+            height: 220px;
             mix-blend-mode: plus-lighter;
           "
         />
@@ -290,6 +314,8 @@
             position: absolute;
             left: -20px;
             top: -148px;
+            width: 908px;
+            height: 220px;
             mix-blend-mode: plus-lighter;
           "
         />
@@ -303,6 +329,8 @@
             position: absolute;
             left: -92px;
             top: -148px;
+            width: 908px;
+            height: 220px;
             mix-blend-mode: plus-lighter;
           "
         />
