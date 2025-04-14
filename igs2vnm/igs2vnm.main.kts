@@ -954,11 +954,15 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
         "playVoice" -> ElementLine("voice", value = getParameter("fileName"))
         "playSoundEffect" -> {
             val soundElementName = "sound${getParameter<UByte>("index").toInt() + 1}"
-            ElementLine(
-                soundElementName,
-                value = getParameter("fileName"),
-                "loop" to getParameter<Boolean>("loop").toString(),
-                "transition_duration" to "0",
+            listOf(
+                ElementLine(soundElementName, "none", "transition_duration" to "0"),
+                CommandLine("snap", soundElementName),
+                ElementLine(
+                    soundElementName,
+                    value = getParameter("fileName"),
+                    "loop" to getParameter<Boolean>("loop").toString(),
+                    "transition_duration" to "0",
+                )
             )
         }
         "stopSoundEffect" -> {
