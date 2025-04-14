@@ -895,9 +895,15 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
         }
         "setBackgroundColorAndClearForegroundsAndAvatar" -> {
             @OptIn(ExperimentalStdlibApi::class)
-            val color = "#" + getParameter<ByteArray>("color").toHexString(HexFormat.UpperCase)
+            val color = getParameter<ByteArray>("color").toHexString(HexFormat.UpperCase)
+            val background =
+                when (color) {
+                    "000000" -> "black"
+                    "FFFFFF" -> "white"
+                    else -> error("Unsupported color $color")
+                }
             listOf(
-                ElementLine("background", color),
+                ElementLine("background", background),
                 ElementLine("foreground*", "none"),
                 ElementLine("avatar", "none"),
             )

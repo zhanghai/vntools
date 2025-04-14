@@ -105,8 +105,8 @@ main() {
     cp index.html "$output_dir/template/"
 
     echo "Copying color backgrounds..."
-    cp '#000000.png' "$output_dir/background/"
-    cp '#FFFFFF.png' "$output_dir/background/"
+    cp 'black.png' "$output_dir/background/"
+    cp 'white.png' "$output_dir/background/"
 
     echo "Moving avatars..."
     mkdir "$output_dir/avatar"
@@ -151,6 +151,9 @@ main() {
         ffmpeg -i "$f" -c:v libx264 -preset slow -tune animation -crf 18 -c:a aac -b:a 128k "${f%.mpg}.mp4"
         rm "$f"
     done
+
+    echo "Creating file list..."
+    find "$output_dir" -type f -printf '%P\n' | sort >"$output_dir/files.lst"
 
     if [[ "$is_zip" == true ]]; then
         output="$(realpath "$2")"
