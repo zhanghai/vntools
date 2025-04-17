@@ -1037,7 +1037,8 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
                 "scale_x" to "${getParameter<UByte>("scaleX")}%",
                 "scale_y" to "${getParameter<UByte>("scaleY")}%",
                 "alpha" to "${(getParameter<UByte>("alpha").toInt() / 2.55f).roundToInt()}%",
-                "transition_duration" to "${getParameter<UShort>("duration")}ms"
+                "transition_duration" to "${getParameter<UShort>("duration")}ms",
+                "transition_easing" to "linear",
             )
         }
         "playAllForegroundAnimations" -> {
