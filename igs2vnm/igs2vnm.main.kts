@@ -877,12 +877,13 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
             state.pendingClearMessage = false
             state.pendingClearMessageSkipName = false
             if (transitionDuration > 1) {
-                clearMessageIfPendingLines + listOf(
+                listOf(
                     ElementLine(
                         "effect",
                         "cross-fade",
                         "transition_duration" to "${transitionDuration}ms",
                     ),
+                ) + clearMessageIfPendingLines + listOf(
                     CommandLine("snap", "background", "foreground*", "avatar"),
                     CommandLine("wait", "effect"),
                     ElementLine("effect", "none"),
