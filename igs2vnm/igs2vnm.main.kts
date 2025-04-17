@@ -1173,8 +1173,6 @@ for ((inputFile, outputFile) in inputFiles.zip(outputFiles)) {
         appendLine(
             """
                 vnmark: 1.0.0
-                width: 1280
-                height: 720
                 blank_line:
                   - ': wait name, text'
                   - ': snap name, text'
