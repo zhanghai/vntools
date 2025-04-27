@@ -133,7 +133,7 @@
         data-src="lily_gauge"
         data-script-style="
           const lilyLevel =
-            Math.max(0, Math.min(Math.floor((($['100'] ?? 128) - 128) / 16) + 4, 8));
+            Math.max(0, Math.min(Math.trunc((($['100'] ?? 128) - 128) / 16) + 4, 8));
           `position: absolute; left: 0; top: ${lilyLevel * -104}px; width: 84px; height: 936px`;
         "
         style="
