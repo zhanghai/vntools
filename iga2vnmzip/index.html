@@ -78,12 +78,15 @@
         alt=""
         src=""
         data-src="q_save_menu"
-        data-script-animate="
-          const previousYuriUpValue = $['previousYuriUpValue'] ?? 128;
-          const currentYuriValue = $['100'] ?? 128;
+        data-on-suspend-animate-script="
+          const previousYuriUpValue = $['previousYuriUpValue'];
+          const currentYuriValue = $['100'];
           $['previousYuriUpValue'] = currentYuriValue;
-          if (currentYuriValue > previousYuriUpValue) {
-            [{opacity: [0, 1, 0]}, 1000];
+          if (
+            previousYuriUpValue !== undefined &&
+              currentYuriValue > previousYuriUpValue
+          ) {
+            [{ opacity: [0, 1, 0] }, 1000];
           }
         "
         style="
@@ -99,12 +102,15 @@
         alt=""
         src=""
         data-src="q_save_menu"
-        data-script-animate="
-          const previousYuriDownValue = $['previousYuriDownValue'] ?? 128;
-          const currentYuriValue = $['100'] ?? 128;
+        data-on-suspend-animate-script="
+          const previousYuriDownValue = $['previousYuriDownValue'];
+          const currentYuriValue = $['100'];
           $['previousYuriDownValue'] = currentYuriValue;
-          if (currentYuriValue < previousYuriDownValue) {
-            [{opacity: [0, 1, 0]}, 1000];
+          if (
+            previousYuriDownValue !== undefined &&
+              currentYuriValue < previousYuriDownValue
+          ) {
+            [{ opacity: [0, 1, 0] }, 1000];
           }
         "
         style="
@@ -131,7 +137,7 @@
         alt=""
         src=""
         data-src="lily_gauge"
-        data-script-style="
+        data-on-suspend-style-script="
           const lilyLevel =
             Math.max(0, Math.min(Math.trunc((($['100'] ?? 128) - 128) / 16) + 4, 8));
           `position: absolute; left: 0; top: ${lilyLevel * -104}px; width: 84px; height: 936px`;
@@ -220,19 +226,18 @@
       }
       div[data-type="choice"] > button *:not(audio)[data-class] {
         opacity: 0;
-        transition: opacity 100ms linear;
       }
       div[data-type="choice"]
-        > button:is(:disabled, :not(:hover, :focus-visible, .selected))
+        > button:is(:disabled, :not(:hover, :focus-visible, .highlighted, .selected))
         *:not(audio)[data-class="inactive"],
       div[data-type="choice"]
-        > button:not(:disabled):is(:hover, :focus-visible, .selected)
+        > button:not(:disabled):is(:hover, :focus-visible, .highlighted, .selected)
         *:not(audio)[data-class="active"],
       div[data-type="choice"]
-        > button:is(:disabled, :not(:hover, :focus-visible, .selected)).visited
+        > button:is(:disabled, :not(:hover, :focus-visible, .highlighted, .selected)).visited
         *:not(audio)[data-class~="inactive-visited"],
       div[data-type="choice"]
-        > button:not(:disabled):is(:hover, :focus-visible, .selected).visited
+        > button:not(:disabled):is(:hover, :focus-visible, .highlighted, .selected).visited
         *:not(audio)[data-class~="active-visited"] {
         opacity: 1;
       }
@@ -241,6 +246,8 @@
   <div data-id="template" style="display: none">
     <button
       type="button"
+      data-on-highlight-audio="sys_102"
+      data-on-select-audio="sys_title"
       data-type="choice"
       style="
         position: absolute;
@@ -256,13 +263,11 @@
         font-size: inherit;
       "
     >
-      <audio data-class="hover" data-src="sys_102"></audio>
       <span
         style="
           position: absolute;
           inset: 0;
           overflow: hidden;
-          isolation: isolate;
         "
       >
         <!--suppress CssInvalidPropertyValue -->
@@ -277,7 +282,6 @@
             top: 0;
             width: 908px;
             height: 220px;
-            mix-blend-mode: plus-lighter;
           "
         />
         <!--suppress CssInvalidPropertyValue -->
@@ -292,7 +296,21 @@
             top: -74px;
             width: 908px;
             height: 220px;
-            mix-blend-mode: plus-lighter;
+          "
+        />
+        <!--suppress CssInvalidPropertyValue -->
+        <img
+          alt=""
+          src=""
+          data-on-select-animate='[{ "opacity": [0, 1, 0, 1, 0, 1, 0, 1, 0], "easing": ["step-start"] }, 1000]'
+          data-src="select_p"
+          style="
+            position: absolute;
+            left: 0;
+            top: -74px;
+            width: 908px;
+            height: 220px;
+            opacity: 0;
           "
         />
       </span>
@@ -318,7 +336,6 @@
             top: -148px;
             width: 908px;
             height: 220px;
-            mix-blend-mode: plus-lighter;
           "
         />
         <!--suppress CssInvalidPropertyValue -->
@@ -333,7 +350,6 @@
             top: -148px;
             width: 908px;
             height: 220px;
-            mix-blend-mode: plus-lighter;
           "
         />
       </span>
