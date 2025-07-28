@@ -1008,8 +1008,12 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
                 // "duration" is ignored here.
                 comment = toString()
             )
-        "playSpecialEffect" -> ElementLine("effect", "shake")
-        "stopSpecialEffect" -> ElementLine("effect", "none")
+        "playSpecialEffect" ->
+            ElementLine(
+                "effect",
+                "animate({ \"translate\": [\"0 0\", \"-11px 11px\", \"0 0\", \"11px -11px\", \"0 0\", \"-11px 11px\", \"0 0\", \"11px -11px\", \"0 0\", \"-11px 11px\", \"0 0\"] }, 300)"
+            )
+        "stopSpecialEffect" -> listOf(ElementLine("effect", "none"), CommandLine("snap", "effect"))
         "waitForClick" -> CommandLine("pause", comment = toString())
         "setForegroundAnimationStart" -> {
             val foregroundElementName = "foreground${getParameter<UByte>("index").toInt() + 1}"
