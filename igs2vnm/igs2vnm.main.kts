@@ -778,7 +778,16 @@ fun BatchedElementsLine(
 private fun Comment?.toStringWithPrecedingSpaceOrEmpty(): String =
     if (this != null) " $this" else ""
 
+enum class WindowStyle(
+    val layout: String,
+) {
+    DIALOGUE("dialogue"),
+    MONOLOGUE("monologue"),
+    NARRATION("narration"),
+}
+
 class VnmarkConversionState {
+    var windowStyle = WindowStyle.DIALOGUE
     var pendingClearMessage = false
     var pendingClearMessageSkipName = false
     val pendingChoiceJumpTargets = mutableListOf<JumpTarget>()
@@ -999,12 +1008,15 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
         "jumpIfHasCompletedEnds" -> CommentLine(" FIXME: $this")
         "addBacklog" -> ElementLine("text", value = getParameter("text"), comment = toString())
         "setWindowVisible" ->
-            CommandLine("set_layout", if (getParameter("visible")) "dialogue" else "none")
-        "clearVerticalMessages" -> CommentLine(" FIXME: $this")
+            CommandLine(
+                "set_layout",
+                if (getParameter("visible")) state.windowStyle.layout else "none",
+            )
+        "clearVerticalMessages" -> ElementLine("text", "none", comment = toString())
         "fadeWindow" ->
             CommandLine(
                 "set_layout",
-                if (getParameter("visible")) "monologue" else "none",
+                if (getParameter("visible")) state.windowStyle.layout else "none",
                 // "duration" is ignored here.
                 comment = toString()
             )
@@ -1079,13 +1091,9 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
         "playCredits" -> CommentLine(toString())
         "setAvatar" -> ElementLine("avatar", value = getParameter("fileName"))
         "setWindowStyle" -> {
-            val layout = when (val style = getParameter<UByte>("style")) {
-                0.UB -> "dialogue"
-                1.UB -> "monologue"
-                2.UB -> "narration"
-                else -> throw IllegalArgumentException("Unknown style $style")
-            }
-            CommandLine("set_layout", layout)
+            val windowStyle = getParameter<UByte>("style")
+            state.windowStyle = WindowStyle.entries[windowStyle.toInt()]
+            null
         }
         "setChapter" -> CommentLine(toString())
         "decreaseMusicVolume", "increaseMusicVolume" -> {
