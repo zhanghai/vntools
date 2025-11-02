@@ -1128,6 +1128,8 @@ private val FURIGANA_REPLACEMENT: (MatchResult) -> CharSequence = {
     "<ruby>${it.groupValues[1]}<rt>${it.groupValues[2].replace("_", "").trim()}</rt></ruby>"
 }
 private val IDEOGRAPHIC_SPACE_REGEX = Regex("(?<=\\p{IsHan}|[<>“”])　+(?=\\p{IsHan}|[<>“”])")
+private val NEWLINE_REGEX =
+    Regex("(?U)(?<=(?<![　＊])\\w([）”」》]|</ruby>)?)\n(?=(?![　＊])([（“「《]|<ruby>)?\\w(?!\\)))")
 
 @Suppress("UNCHECKED_CAST")
 private fun <T> Instruction.getParameter(name: String): T {
@@ -1141,6 +1143,7 @@ private fun <T> Instruction.getParameter(name: String): T {
                 .replace('･', ' ')
                 .replace(FURIGANA_REGEX, FURIGANA_REPLACEMENT)
                 .replace(IDEOGRAPHIC_SPACE_REGEX, "")
+                .replace(NEWLINE_REGEX, "")
                 as T
         else -> parameter
     }
