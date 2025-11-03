@@ -788,6 +788,7 @@ enum class WindowStyle(
 
 class VnmarkConversionState {
     var windowStyle = WindowStyle.DIALOGUE
+    var monologueTextIndex = 0
     var pendingClearMessage = false
     var pendingClearMessageSkipName = false
     val pendingChoiceJumpTargets = mutableListOf<JumpTarget>()
@@ -813,13 +814,18 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
     val lineOrLines: Any? = when (descriptor.name) {
         "showMessage" -> {
             val text = getParameter<String>("text")
-            if (text.startsWith('＃')) {
-                state.pendingClearMessageSkipName = true
-                ElementLine("name", text.substring(1))
+            if (state.windowStyle == WindowStyle.MONOLOGUE) {
+                ++state.monologueTextIndex
+                listOf(ElementLine("text${state.monologueTextIndex}", text), BlankLine())
             } else {
-                state.pendingClearMessage = true
-                state.pendingClearMessageSkipName = false
-                clearMessageIfPendingLines + listOf(ElementLine("text", value = text), BlankLine())
+                if (text.startsWith('＃')) {
+                    state.pendingClearMessageSkipName = true
+                    ElementLine("name", text.substring(1))
+                } else {
+                    state.pendingClearMessage = true
+                    state.pendingClearMessageSkipName = false
+                    clearMessageIfPendingLines + listOf(ElementLine("text", text), BlankLine())
+                }
             }
         }
         "exitScript" -> CommandLine("exit")
@@ -1012,7 +1018,10 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
                 "set_layout",
                 if (getParameter("visible")) state.windowStyle.layout else "none",
             )
-        "clearVerticalMessages" -> ElementLine("text", "none", comment = toString())
+        "clearVerticalMessages" -> {
+            state.monologueTextIndex = 0
+            listOf(ElementLine("text*", "none"), CommandLine("snap", "text*"))
+        }
         "fadeWindow" ->
             CommandLine(
                 "set_layout",
@@ -1192,8 +1201,8 @@ for ((inputFile, outputFile) in inputFiles.zip(outputFiles)) {
             """
                 vnmark: 1.0.0
                 blank_line:
-                  - ': wait name, text'
-                  - ': snap name, text'
+                  - ': wait name, text*'
+                  - ': snap name, text*'
                   - ': pause'
                   - ': snap voice'
             """.trimIndent())
