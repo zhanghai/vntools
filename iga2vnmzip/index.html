@@ -167,6 +167,13 @@
         "
       />
     </div>
+    <style>
+      div[data-layout="dialogue"] div[data-type="name"] > *,
+      div[data-layout="dialogue"] div[data-type="text"] > * {
+        margin-top: -0.25em;
+        padding-top: 0.25em;
+      }
+    </style>
     <div
       data-type="name"
       style="
@@ -175,6 +182,8 @@
         top: 570px;
         width: 78px;
         height: 150px;
+        margin-top: -0.25em;
+        padding-top: 0.25em;
       "
     ></div>
     <div
@@ -185,6 +194,8 @@
         top: 570px;
         width: 600px;
         height: 150px;
+        margin-top: -0.25em;
+        padding-top: 0.25em;
         overflow: hidden;
         white-space: pre-wrap;
       "
@@ -194,6 +205,12 @@
     data-layout="monologue"
     style="position: absolute; inset: 0; font-size: 24px; line-height: 1.75"
   >
+    <style>
+      div[data-layout="monologue"] div[data-type="text"] > * {
+        margin-right: -0.25em;
+        padding-right: 0.25em;
+      }
+    </style>
     <div
       data-type="text"
       style="
@@ -202,6 +219,8 @@
         top: 21px;
         width: 1184px;
         height: 600px;
+        margin-right: -0.25em;
+        padding-right: 0.25em;
         overflow: hidden;
         white-space: pre-wrap;
         writing-mode: vertical-rl;
