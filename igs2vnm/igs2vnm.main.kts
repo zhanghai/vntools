@@ -787,6 +787,7 @@ enum class WindowStyle(
 }
 
 class VnmarkConversionState {
+    // FIXME: These may break after jumps.
     var windowStyle = WindowStyle.DIALOGUE
     var monologueTextIndex = 0
     var pendingClearMessage = false
