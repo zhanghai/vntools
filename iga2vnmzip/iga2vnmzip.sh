@@ -108,6 +108,11 @@ main() {
     cp 'black.png' "$output_dir/background/"
     cp 'white.png' "$output_dir/background/"
 
+    echo "Copying credits vnmark..."
+    for f in *_99999.vnm; do
+        cp "$f" "$output_dir/vnmark/"
+    done
+
     echo "Moving avatars..."
     mkdir "$output_dir/avatar"
     for f in "$output_dir/foreground/f"*; do
@@ -117,6 +122,11 @@ main() {
     echo "Moving template sounds..."
     for f in "$output_dir/sound/sys_"*; do
         mv "$f" "$output_dir/template/"
+    done
+
+    echo "Moving credit images..."
+    for f in "$output_dir/template/credit"*; do
+        mv "$f" "$output_dir/foreground/"
     done
 
     echo "Converting script to VNMark..."
