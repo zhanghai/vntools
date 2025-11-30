@@ -109,6 +109,7 @@ main() {
     cp 'white.png' "$output_dir/background/"
 
     echo "Copying credits vnmark..."
+    mkdir "$output_dir/vnmark"
     for f in *_99999.vnm; do
         cp "$f" "$output_dir/vnmark/"
     done
