@@ -866,12 +866,15 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
         "setBackgroundAndClearForegroundsAndAvatar" -> {
             listOf(
                 ElementLine("background", value = getParameter("fileName")),
-                ElementLine("foreground*", "none"),
+                ElementLine("foreground*", "none", "alpha" to "100%"),
                 ElementLine("avatar", "none"),
             )
         }
         "clearForegroundsAndAvatar" ->
-            listOf(ElementLine("foreground*", "none"), ElementLine("avatar", "none"))
+            listOf(
+                ElementLine("foreground*", "none", "alpha" to "100%"),
+                ElementLine("avatar", "none"),
+            )
         "loadForeground1" -> {
             val foregroundElementName = "foreground${getParameter<UByte>("index").toInt() + 1}"
             ElementLine(foregroundElementName, value = getParameter("fileName"))
@@ -921,7 +924,7 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
                 }
             listOf(
                 ElementLine("background", background),
-                ElementLine("foreground*", "none"),
+                ElementLine("foreground*", "none", "alpha" to "100%"),
                 ElementLine("avatar", "none"),
             )
         }
