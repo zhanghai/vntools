@@ -98,6 +98,20 @@ main() {
         done
     fi
 
+    echo "Lowercasing files..."
+    for d in "$output_dir/"*/; do
+        for f in "$d"*; do
+            if [[ "$f" == *'*' ]]; then
+                break
+            fi
+            local f2
+            f2="${f,,}"
+            if [[ "$f" != "$f2" ]]; then
+                mv "$f" "$f2"
+            fi
+        done
+    done
+
     echo "Copying manifest..."
     cp manifest.yaml "$output_dir/"
 
@@ -109,13 +123,13 @@ main() {
     cp 'white.png' "$output_dir/background/"
 
     echo "Copying credits vnmark..."
-    mkdir "$output_dir/vnmark"
+    mkdir -p "$output_dir/vnmark"
     for f in *_99999.vnm; do
         cp "$f" "$output_dir/vnmark/"
     done
 
     echo "Moving avatars..."
-    mkdir "$output_dir/avatar"
+    mkdir -p "$output_dir/avatar"
     for f in "$output_dir/foreground/f"*; do
         mv "$f" "$output_dir/avatar/"
     done
