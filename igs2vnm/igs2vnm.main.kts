@@ -866,13 +866,13 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
         "setBackgroundAndClearForegroundsAndAvatar" -> {
             listOf(
                 ElementLine("background", value = getParameter("fileName")),
-                ElementLine("foreground*", "none", "alpha" to "100%"),
+                ElementLine("foreground*", "none", "alpha" to "initial"),
                 ElementLine("avatar", "none"),
             )
         }
         "clearForegroundsAndAvatar" ->
             listOf(
-                ElementLine("foreground*", "none", "alpha" to "100%"),
+                ElementLine("foreground*", "none", "alpha" to "initial"),
                 ElementLine("avatar", "none"),
             )
         "loadForeground1" -> {
@@ -924,7 +924,7 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
                 }
             listOf(
                 ElementLine("background", background),
-                ElementLine("foreground*", "none", "alpha" to "100%"),
+                ElementLine("foreground*", "none", "alpha" to "initial"),
                 ElementLine("avatar", "none"),
             )
         }
