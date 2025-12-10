@@ -892,15 +892,15 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
             )
         }
         "showImages" -> {
-            val transitionDuration = getParameter<UShort>("transitionDuration").toInt()
+            val duration = getParameter<UShort>("transitionDuration").toInt()
             state.pendingClearMessage = false
             state.pendingClearMessageSkipName = false
-            if (transitionDuration > 1) {
+            if (duration > 1) {
                 listOf(
                     ElementLine(
                         "effect",
                         "cross-fade",
-                        "transition_duration" to "${transitionDuration}ms",
+                        "parameters" to duration.toString(),
                     ),
                 ) + clearMessageIfPendingLines + listOf(
                     CommandLine("snap", "background", "foreground*", "avatar"),
@@ -1036,7 +1036,8 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
         "playSpecialEffect" ->
             ElementLine(
                 "effect",
-                "animate({ \"translate\": [\"0 0\", \"-11px 11px\", \"0 0\", \"11px -11px\", \"0 0\", \"-11px 11px\", \"0 0\", \"11px -11px\", \"0 0\", \"-11px 11px\", \"0 0\"] }, 300)"
+                "animate",
+                "parameters" to "{ \"translate\": [\"0 0\", \"-11px 11px\", \"0 0\", \"11px -11px\", \"0 0\", \"-11px 11px\", \"0 0\", \"11px -11px\", \"0 0\", \"-11px 11px\", \"0 0\"] }, 300"
             )
         "stopSpecialEffect" -> listOf(ElementLine("effect", "none"), CommandLine("snap", "effect"))
         "waitForClick" -> CommandLine("pause", comment = toString())
