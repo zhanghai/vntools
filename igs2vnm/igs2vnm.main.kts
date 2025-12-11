@@ -790,6 +790,7 @@ class VnmarkConversionState {
     // FIXME: These may break after jumps.
     var windowStyle = WindowStyle.DIALOGUE
     var monologueTextIndex = 0
+    var pendingAnimationForegroundElementIndices = mutableSetOf<Int>()
     var pendingClearMessage = false
     var pendingClearMessageSkipName = false
     val pendingChoiceJumpTargets = mutableListOf<JumpTarget>()
@@ -1042,7 +1043,8 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
         "stopSpecialEffect" -> listOf(ElementLine("effect", "none"), CommandLine("snap", "effect"))
         "waitForClick" -> CommandLine("pause", comment = toString())
         "setForegroundAnimationStart" -> {
-            val foregroundElementName = "foreground${getParameter<UByte>("index").toInt() + 1}"
+            val foregroundElementIndex = getParameter<UByte>("index").toInt() + 1;
+            val foregroundElementName = "foreground$foregroundElementIndex"
             val properties = listOfNotNull(
                 "anchor_x" to "50%",
                 "position_x" to "${getParameter<Short>("centerX")}px",
@@ -1050,26 +1052,42 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
                 "scale_x" to "${getParameter<UByte>("scaleX")}%",
                 "scale_y" to "${getParameter<UByte>("scaleY")}%",
                 "alpha" to "${(getParameter<UByte>("alpha").toInt() / 2.55f).roundToInt()}%",
-                if (getParameter("loop")) "transition_iteration_count" to "infinite" else null
             ).toTypedArray()
+            if (getParameter("loop")) {
+                state.pendingAnimationForegroundElementIndices += foregroundElementIndex
+            }
             listOf(
                 ElementLine(foregroundElementName, *properties),
                 CommandLine("snap", foregroundElementName)
             )
         }
         "setForegroundAnimationEnd" -> {
-            val foregroundElementName = "foreground${getParameter<UByte>("index").toInt() + 1}"
-            ElementLine(
-                foregroundElementName,
-                "anchor_x" to "50%",
-                "position_x" to "${getParameter<Short>("centerX")}px",
-                "position_y" to "${getParameter<Short>("top")}px",
-                "scale_x" to "${getParameter<UByte>("scaleX")}%",
-                "scale_y" to "${getParameter<UByte>("scaleY")}%",
-                "alpha" to "${(getParameter<UByte>("alpha").toInt() / 2.55f).roundToInt()}%",
-                "transition_duration" to "${getParameter<UShort>("duration")}ms",
-                "transition_easing" to "linear",
-            )
+            val foregroundElementIndex = getParameter<UByte>("index").toInt() + 1
+            val foregroundElementName = "foreground$foregroundElementIndex"
+            val alphaPercentage = (getParameter<UByte>("alpha").toInt() / 2.55f).roundToInt()
+            val duration = getParameter<UShort>("duration")
+            if (state.pendingAnimationForegroundElementIndices.remove(foregroundElementIndex)) {
+                ElementLine(
+                    "animation$foregroundElementIndex",
+                    "$foregroundElementName.alpha",
+                    "duration" to "${duration}ms",
+                    "iteration_count" to "Infinity",
+                    "value_1" to "${100 - alphaPercentage}%",
+                    "value_2" to "$alphaPercentage%",
+                )
+            } else {
+                ElementLine(
+                    foregroundElementName,
+                    "anchor_x" to "50%",
+                    "position_x" to "${getParameter<Short>("centerX")}px",
+                    "position_y" to "${getParameter<Short>("top")}px",
+                    "scale_x" to "${getParameter<UByte>("scaleX")}%",
+                    "scale_y" to "${getParameter<UByte>("scaleY")}%",
+                    "alpha" to "$alphaPercentage%",
+                    "transition_duration" to "${duration}ms",
+                    "transition_easing" to "linear",
+                )
+            }
         }
         "playAllForegroundAnimations" -> {
             state.pendingClearMessage = false
@@ -1078,10 +1096,13 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
             clearMessageIfPendingLines
         }
         "stopForegroundAnimation" -> {
-            val foregroundElementName = "foreground${getParameter<UByte>("index").toInt() + 1}"
-            // This may not pass due to jumps or simply invalid script.
-            //check(foregroundElementName in state.currentForegroundElementNames)
-            CommandLine("snap", foregroundElementName)
+            val elementIndex = getParameter<UByte>("index").toInt() + 1
+            val animationElementName = "animation$elementIndex"
+            val foregroundElementName = "foreground$elementIndex"
+            listOf(
+                ElementLine(animationElementName, "none"),
+                CommandLine("snap", foregroundElementName, animationElementName),
+            )
         }
         "loadForeground2" -> {
             val foregroundElementName = "foreground${getParameter<UByte>("index").toInt() + 1}"
