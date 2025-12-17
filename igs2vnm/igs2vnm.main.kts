@@ -885,6 +885,7 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
             val scale = "${getParameter<UByte>("scale")}%"
             ElementLine(
                 foregroundElementName,
+                "pivot_y" to "0",
                 "scale_x" to scale,
                 "scale_y" to scale,
                 "anchor_x" to "50%",
@@ -1049,6 +1050,7 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
                 "anchor_x" to "50%",
                 "position_x" to "${getParameter<Short>("centerX")}px",
                 "position_y" to "${getParameter<Short>("top")}px",
+                "pivot_y" to "0",
                 "scale_x" to "${getParameter<UByte>("scaleX")}%",
                 "scale_y" to "${getParameter<UByte>("scaleY")}%",
                 "alpha" to "${(getParameter<UByte>("alpha").toInt() / 2.55f).roundToInt()}%",
@@ -1081,6 +1083,7 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
                     "anchor_x" to "50%",
                     "position_x" to "${getParameter<Short>("centerX")}px",
                     "position_y" to "${getParameter<Short>("top")}px",
+                    "pivot_y" to "0",
                     "scale_x" to "${getParameter<UByte>("scaleX")}%",
                     "scale_y" to "${getParameter<UByte>("scaleY")}%",
                     "alpha" to "$alphaPercentage%",
