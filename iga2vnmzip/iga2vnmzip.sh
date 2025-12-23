@@ -124,7 +124,7 @@ main() {
 
     echo "Copying credits vnmark..."
     mkdir -p "$output_dir/vnmark"
-    for f in *_99999.vnm; do
+    for f in *_99999*.vnm; do
         cp "$f" "$output_dir/vnmark/"
     done
 
