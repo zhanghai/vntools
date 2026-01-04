@@ -122,9 +122,9 @@ main() {
     cp 'black.png' "$output_dir/background/"
     cp 'white.png' "$output_dir/background/"
 
-    echo "Copying credits vnmark..."
+    echo "Copying additional VNMark..."
     mkdir -p "$output_dir/vnmark"
-    for f in *_99999*.vnm; do
+    for f in *_*.vnm; do
         cp "$f" "$output_dir/vnmark/"
     done
 
