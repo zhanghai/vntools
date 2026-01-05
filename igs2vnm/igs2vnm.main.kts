@@ -166,7 +166,7 @@ val instructionDescriptors = listOf(
     ),
     InstructionDescriptor("clearForegroundsAndAvatar", 0x11.UB, 0x08.UB),
     InstructionDescriptor(
-        "loadForeground1", 0x12.UB, 0x04.UB,
+        "loadForeground", 0x12.UB, 0x04.UB,
         ParameterDescriptor("index", 2..2, UByte::class.java),
         ParameterDescriptor("fileNameLength", 3..3, UByte::class.java),
         stringNames = "fileNameLength" to "fileName"
@@ -179,7 +179,7 @@ val instructionDescriptors = listOf(
         ParameterDescriptor("top", 6..7, Short::class.java)
     ),
     InstructionDescriptor(
-        "showImages", 0x14.UB, 0x08.UB,
+        "crossFadeAndClearForegroundsForAnimation", 0x14.UB, 0x08.UB,
         ParameterDescriptor("transitionDuration", 4..5, UShort::class.java)
     ),
     InstructionDescriptor(
@@ -386,7 +386,7 @@ val instructionDescriptors = listOf(
     // Only appeared in 04a_02700s.s. TODO: Likely return to selection?
     InstructionDescriptor("0x8B", 0x8B.UB, 0x04.UB),
     InstructionDescriptor(
-        "loadForeground2", 0x9C.UB, 0x04.UB,
+        "loadForegroundForAnimation", 0x9C.UB, 0x04.UB,
         ParameterDescriptor("index", 2..2, UByte::class.java),
         ParameterDescriptor("fileNameLength", 3..3, UByte::class.java),
         stringNames = "fileNameLength" to "fileName"
@@ -788,6 +788,7 @@ enum class WindowStyle(
 
 class VnmarkConversionState {
     // FIXME: These may break after jumps.
+    var foregroundForAnimationIndices = mutableSetOf<Int>()
     var windowStyle = WindowStyle.DIALOGUE
     var monologueTextIndex = 0
     var pendingAnimationForegroundElementIndices = mutableSetOf<Int>()
@@ -865,19 +866,24 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
         "wait" -> CommandLine("delay", getParameter<UShort>("duration").toString())
         "setBackground" -> ElementLine("background", value = getParameter("fileName"))
         "setBackgroundAndClearForegroundsAndAvatar" -> {
+            state.foregroundForAnimationIndices.clear()
             listOf(
                 ElementLine("background", value = getParameter("fileName")),
                 ElementLine("foreground*", "none", "alpha" to "initial"),
                 ElementLine("avatar", "none"),
             )
         }
-        "clearForegroundsAndAvatar" ->
+        "clearForegroundsAndAvatar" -> {
+            state.foregroundForAnimationIndices.clear()
             listOf(
                 ElementLine("foreground*", "none", "alpha" to "initial"),
                 ElementLine("avatar", "none"),
             )
-        "loadForeground1" -> {
-            val foregroundElementName = "foreground${getParameter<UByte>("index").toInt() + 1}"
+        }
+        "loadForeground" -> {
+            val foregroundElementIndex = getParameter<UByte>("index").toInt() + 1
+            state.foregroundForAnimationIndices -= foregroundElementIndex
+            val foregroundElementName = "foreground$foregroundElementIndex"
             ElementLine(foregroundElementName, value = getParameter("fileName"))
         }
         "setForeground" -> {
@@ -893,8 +899,11 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
                 "position_y" to "${getParameter<Short>("top")}px"
             )
         }
-        "showImages" -> {
+        "crossFadeAndClearForegroundsForAnimation" -> {
             val duration = getParameter<UShort>("transitionDuration").toInt()
+            val clearForegroundsForAnimationLines =
+                state.foregroundForAnimationIndices.map { ElementLine("foreground$it", "none") }
+            state.foregroundForAnimationIndices.clear()
             state.pendingClearMessage = false
             state.pendingClearMessageSkipName = false
             if (duration > 1) {
@@ -904,18 +913,19 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
                         "cross-fade",
                         "parameters" to duration.toString(),
                     ),
-                ) + clearMessageIfPendingLines + listOf(
+                ) + clearForegroundsForAnimationLines + clearMessageIfPendingLines + listOf(
                     CommandLine("snap", "background", "foreground*", "avatar"),
                     CommandLine("wait", "effect"),
                     ElementLine("effect", "none"),
                     CommandLine("snap", "effect"),
                 )
             } else {
-                clearMessageIfPendingLines +
+                clearForegroundsForAnimationLines + clearMessageIfPendingLines +
                     CommandLine("snap", "background", "foreground*", "avatar")
             }
         }
         "setBackgroundColorAndClearForegroundsAndAvatar" -> {
+            state.foregroundForAnimationIndices.clear()
             @OptIn(ExperimentalStdlibApi::class)
             val color = getParameter<ByteArray>("color").toHexString(HexFormat.UpperCase)
             val background =
@@ -1107,8 +1117,10 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
                 CommandLine("snap", foregroundElementName, animationElementName),
             )
         }
-        "loadForeground2" -> {
-            val foregroundElementName = "foreground${getParameter<UByte>("index").toInt() + 1}"
+        "loadForegroundForAnimation" -> {
+            val foregroundElementIndex = getParameter<UByte>("index").toInt() + 1
+            state.foregroundForAnimationIndices += foregroundElementIndex
+            val foregroundElementName = "foreground$foregroundElementIndex"
             ElementLine(foregroundElementName, value = getParameter("fileName"))
         }
         "playVideo" -> {
