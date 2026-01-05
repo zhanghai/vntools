@@ -3,95 +3,95 @@ vnmark: 1.0.0
 music: eds_b, transition_duration = 0
 background: white
 : snap background
-foreground1: creditbase01, transition_duration = 1.5s, transition_easing = linear
+foreground1: creditbase01, transition_duration = 1.5s
 : wait foreground1
-foreground2: credit01, transition_duration = 1s, transition_easing = linear
+foreground2: credit01, transition_duration = 1s
 : wait foreground2
 : delay 4000
-foreground2: none, transition_duration = 1s, transition_easing = linear
+foreground2: none, transition_duration = 1s
 : wait foreground2
-foreground2: credit02, transition_duration = 1s, transition_easing = linear
-: wait foreground2
-: delay 4000
-foreground2: none, transition_duration = 1s, transition_easing = linear
-: wait foreground2
-foreground2: credit03, transition_duration = 1s, transition_easing = linear
+foreground2: credit02, transition_duration = 1s
 : wait foreground2
 : delay 4000
-foreground2: none, transition_duration = 1s, transition_easing = linear
+foreground2: none, transition_duration = 1s
 : wait foreground2
-foreground2: credit04, transition_duration = 1s, transition_easing = linear
+foreground2: credit03, transition_duration = 1s
 : wait foreground2
 : delay 4000
-foreground2: none, transition_duration = 1s, transition_easing = linear
+foreground2: none, transition_duration = 1s
 : wait foreground2
-foreground1: none, transition_duration = 1s, transition_easing = linear
+foreground2: credit04, transition_duration = 1s
+: wait foreground2
+: delay 4000
+foreground2: none, transition_duration = 1s
+: wait foreground2
+foreground1: none, transition_duration = 1s
 : wait foreground1
-foreground1: creditbase02, transition_duration = 1.5s, transition_easing = linear
+foreground1: creditbase02, transition_duration = 1.5s
 : wait foreground1
-foreground2: credit05, transition_duration = 1s, transition_easing = linear
+foreground2: credit05, transition_duration = 1s
 : wait foreground2
 : delay 4000
-foreground2: none, transition_duration = 1s, transition_easing = linear
+foreground2: none, transition_duration = 1s
 : wait foreground2
-foreground2: credit06, transition_duration = 1s, transition_easing = linear
-: wait foreground2
-: delay 4000
-foreground2: none, transition_duration = 1s, transition_easing = linear
-: wait foreground2
-foreground2: credit07, transition_duration = 1s, transition_easing = linear
+foreground2: credit06, transition_duration = 1s
 : wait foreground2
 : delay 4000
-foreground2: none, transition_duration = 1s, transition_easing = linear
+foreground2: none, transition_duration = 1s
 : wait foreground2
-foreground2: credit08, transition_duration = 1s, transition_easing = linear
+foreground2: credit07, transition_duration = 1s
 : wait foreground2
 : delay 4000
-foreground2: none, transition_duration = 1s, transition_easing = linear
+foreground2: none, transition_duration = 1s
 : wait foreground2
-foreground1: none, transition_duration = 1s, transition_easing = linear
+foreground2: credit08, transition_duration = 1s
+: wait foreground2
+: delay 4000
+foreground2: none, transition_duration = 1s
+: wait foreground2
+foreground1: none, transition_duration = 1s
 : wait foreground1
-foreground1: creditbase03, transition_duration = 1.5s, transition_easing = linear
+foreground1: creditbase03, transition_duration = 1.5s
 : wait foreground1
-foreground2: credit09, transition_duration = 1s, transition_easing = linear
+foreground2: credit09, transition_duration = 1s
 : wait foreground2
 : delay 4000
-foreground2: none, transition_duration = 1s, transition_easing = linear
+foreground2: none, transition_duration = 1s
 : wait foreground2
-foreground2: credit10, transition_duration = 1s, transition_easing = linear
-: wait foreground2
-: delay 4000
-foreground2: none, transition_duration = 1s, transition_easing = linear
-: wait foreground2
-foreground2: credit11, transition_duration = 1s, transition_easing = linear
+foreground2: credit10, transition_duration = 1s
 : wait foreground2
 : delay 4000
-foreground2: none, transition_duration = 1s, transition_easing = linear
+foreground2: none, transition_duration = 1s
 : wait foreground2
-foreground2: credit12, transition_duration = 1s, transition_easing = linear
+foreground2: credit11, transition_duration = 1s
 : wait foreground2
 : delay 4000
-foreground2: none, transition_duration = 1s, transition_easing = linear
+foreground2: none, transition_duration = 1s
 : wait foreground2
-foreground1: none, transition_duration = 1s, transition_easing = linear
+foreground2: credit12, transition_duration = 1s
+: wait foreground2
+: delay 4000
+foreground2: none, transition_duration = 1s
+: wait foreground2
+foreground1: none, transition_duration = 1s
 : wait foreground1
-foreground1: creditbase04, transition_duration = 1.5s, transition_easing = linear
+foreground1: creditbase04, transition_duration = 1.5s
 : wait foreground1
-foreground2: credit13, transition_duration = 1s, transition_easing = linear
+foreground2: credit13, transition_duration = 1s
 : wait foreground2
 : delay 4000
-foreground2: none, transition_duration = 1s, transition_easing = linear
+foreground2: none, transition_duration = 1s
 : wait foreground2
-foreground2: credit14, transition_duration = 1s, transition_easing = linear
+foreground2: credit14, transition_duration = 1s
 : wait foreground2
 : delay 4000
-foreground2: none, transition_duration = 1s, transition_easing = linear
+foreground2: none, transition_duration = 1s
 : wait foreground2
-foreground2: credit15, transition_duration = 1s, transition_easing = linear
+foreground2: credit15, transition_duration = 1s
 : wait foreground2
 : delay 6500
-foreground1: none, transition_duration = 4.5s, transition_easing = linear
-foreground2: none, transition_duration = 4.5s, transition_easing = linear
+foreground1: none, transition_duration = 4.5s
+foreground2: none, transition_duration = 4.5s
 : wait foreground1, foreground2
 music: none
 : snap music

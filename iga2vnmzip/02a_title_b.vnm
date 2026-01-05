@@ -1,0 +1,30 @@
+vnmark: 1.0.0
+
+background: black
+: snap background
+foreground1: logo3, transition_duration = 3s
+: wait foreground1
+: delay 3000
+foreground1: logo4, transition_duration = 3s
+: wait foreground1
+: delay 3000
+foreground1: caution03, transition_duration = 3s
+: wait foreground1
+: delay 3000
+foreground1: caution04, transition_duration = 3s
+: wait foreground1
+: delay 3000
+foreground1: caution05, transition_duration = 3s
+: wait foreground1
+: delay 3000
+foreground1: white, transition_duration = 2s
+: wait foreground1
+music: bgm12b, transition_duration = 0
+foreground1: title_base2, transition_duration = 5s
+: wait foreground1
+foreground2: title_logo2, transition_duration = 2s
+: wait foreground2
+: delay 20000
+music: none
+: snap music
+: exit

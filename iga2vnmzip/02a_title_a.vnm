@@ -1,0 +1,28 @@
+vnmark: 1.0.0
+
+background: black
+: snap background
+foreground1: logo1, transition_duration = 3s
+: wait foreground1
+: delay 3000
+foreground1: logo2, transition_duration = 3s
+: wait foreground1
+: delay 3000
+foreground1: caution01, transition_duration = 3s
+: wait foreground1
+: delay 3000
+foreground1: black, transition_duration = 2s
+: wait foreground1
+music: bgm11, transition_duration = 0
+foreground1: title_base, transition_duration = 5s
+: wait foreground1
+foreground3: flower01, position_x = 325px, position_y = 50px, transition_duration = 1.5s
+: wait foreground3
+foreground2: flower02, position_x = 400px, position_y = 200px, transition_duration = 1.5s
+: wait foreground2
+foreground4: title_logo, position_x = 234px, position_y = 240px, transition_duration = 1.5s
+: wait foreground4
+: delay 6500
+music: none
+: snap music
+: exit
