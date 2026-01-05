@@ -791,7 +791,7 @@ class VnmarkConversionState {
     var foregroundForAnimationIndices = mutableSetOf<Int>()
     var windowStyle = WindowStyle.DIALOGUE
     var monologueTextIndex = 0
-    var pendingAnimationForegroundElementIndices = mutableSetOf<Int>()
+    var pendingAnimationIndexToStartProperties = mutableMapOf<Int, List<Pair<String, String>>>()
     var pendingClearMessage = false
     var pendingClearMessageSkipName = false
     val pendingChoiceJumpTargets = mutableListOf<JumpTarget>()
@@ -1061,9 +1061,8 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
         "stopSpecialEffect" -> listOf(ElementLine("effect", "none"), CommandLine("snap", "effect"))
         "waitForClick" -> CommandLine("pause", comment = toString())
         "setForegroundAnimationStart" -> {
-            val foregroundElementIndex = getParameter<UByte>("index").toInt() + 1;
-            val foregroundElementName = "foreground$foregroundElementIndex"
-            val properties = listOfNotNull(
+            val elementIndex = getParameter<UByte>("index").toInt() + 1;
+            val properties = listOf(
                 "anchor_x" to "50%",
                 "position_x" to "${getParameter<Short>("centerX")}px",
                 "position_y" to "${getParameter<Short>("top")}px",
@@ -1071,41 +1070,67 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
                 "scale_x" to "${getParameter<UByte>("scaleX")}%",
                 "scale_y" to "${getParameter<UByte>("scaleY")}%",
                 "alpha" to "${(getParameter<UByte>("alpha").toInt() / 2.55f).roundToInt()}%",
-            ).toTypedArray()
-            if (getParameter("loop")) {
-                state.pendingAnimationForegroundElementIndices += foregroundElementIndex
-            }
-            listOf(
-                ElementLine(foregroundElementName, *properties),
-                CommandLine("snap", foregroundElementName)
             )
+            if (getParameter("loop")) {
+                state.pendingAnimationIndexToStartProperties[elementIndex] = properties
+                null
+            } else {
+                ElementLine("foreground$elementIndex", *properties.toTypedArray())
+            }
         }
         "setForegroundAnimationEnd" -> {
-            val foregroundElementIndex = getParameter<UByte>("index").toInt() + 1
-            val foregroundElementName = "foreground$foregroundElementIndex"
-            val alphaPercentage = (getParameter<UByte>("alpha").toInt() / 2.55f).roundToInt()
+            val elementIndex = getParameter<UByte>("index").toInt() + 1
+            val foregroundElementName = "foreground$elementIndex"
+            val endProperties = listOf(
+                "anchor_x" to "50%",
+                "position_x" to "${getParameter<Short>("centerX")}px",
+                "position_y" to "${getParameter<Short>("top")}px",
+                "pivot_y" to "0",
+                "scale_x" to "${getParameter<UByte>("scaleX")}%",
+                "scale_y" to "${getParameter<UByte>("scaleY")}%",
+                "alpha" to "${(getParameter<UByte>("alpha").toInt() / 2.55f).roundToInt()}%",
+            )
             val duration = getParameter<UShort>("duration")
-            if (state.pendingAnimationForegroundElementIndices.remove(foregroundElementIndex)) {
-                ElementLine(
-                    "animation$foregroundElementIndex",
-                    "$foregroundElementName.alpha",
-                    "duration" to "${duration}ms",
-                    "iteration_count" to "Infinity",
-                    "value_1" to "${100 - alphaPercentage}%",
-                    "value_2" to "$alphaPercentage%",
+            val startProperties =
+                state.pendingAnimationIndexToStartProperties.remove(elementIndex)
+            if (startProperties != null) {
+                lateinit var propertyName: String
+                lateinit var startValue: String
+                lateinit var endValue: String
+                for ((startProperty, endProperty) in startProperties.zip(endProperties)) {
+                    check(startProperty.first == endProperty.first)
+                    if (startProperty.second != endProperty.second) {
+                        propertyName = startProperty.first
+                        startValue = startProperty.second
+                        endValue = endProperty.second
+                        break
+                    }
+                }
+                listOf(
+                    // An infinite animation finishes at its end value in Flowers.
+                    ElementLine(foregroundElementName, *endProperties.toTypedArray()),
+                    CommandLine("snap", foregroundElementName),
+                    ElementLine(
+                        "animation$elementIndex",
+                        "$foregroundElementName.$propertyName",
+                        "duration" to "${duration}ms",
+                        "iteration_count" to "Infinity",
+                        "value_1" to startValue,
+                        "value_2" to endValue,
+                    ),
                 )
             } else {
-                ElementLine(
-                    foregroundElementName,
-                    "anchor_x" to "50%",
-                    "position_x" to "${getParameter<Short>("centerX")}px",
-                    "position_y" to "${getParameter<Short>("top")}px",
-                    "pivot_y" to "0",
-                    "scale_x" to "${getParameter<UByte>("scaleX")}%",
-                    "scale_y" to "${getParameter<UByte>("scaleY")}%",
-                    "alpha" to "$alphaPercentage%",
-                    "transition_duration" to "${duration}ms",
-                    "transition_easing" to "linear",
+                listOf(
+                    CommandLine("snap", foregroundElementName),
+                    ElementLine(
+                        foregroundElementName,
+                        *(
+                            endProperties + listOf(
+                                "transition_duration" to "${duration}ms",
+                                "transition_easing" to "linear",
+                            )
+                            ).toTypedArray()
+                    ),
                 )
             }
         }
