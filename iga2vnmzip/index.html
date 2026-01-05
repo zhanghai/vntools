@@ -95,18 +95,8 @@
       <img
         alt=""
         src=""
+        data-id="yuri-up"
         data-src="q_save_menu"
-        data-on-suspend-animate-script="
-          const previousYuriUpValue = $['previousYuriUpValue'];
-          const currentYuriValue = $['100'];
-          $['previousYuriUpValue'] = currentYuriValue;
-          if (
-            previousYuriUpValue !== undefined &&
-              currentYuriValue > previousYuriUpValue
-          ) {
-            [{ opacity: [0, 1, 0] }, 1000];
-          }
-        "
         style="
           position: absolute;
           left: 0;
@@ -119,18 +109,8 @@
       <img
         alt=""
         src=""
+        data-id="yuri-down"
         data-src="q_save_menu"
-        data-on-suspend-animate-script="
-          const previousYuriDownValue = $['previousYuriDownValue'];
-          const currentYuriValue = $['100'];
-          $['previousYuriDownValue'] = currentYuriValue;
-          if (
-            previousYuriDownValue !== undefined &&
-              currentYuriValue < previousYuriDownValue
-          ) {
-            [{ opacity: [0, 1, 0] }, 1000];
-          }
-        "
         style="
           position: absolute;
           left: -120px;

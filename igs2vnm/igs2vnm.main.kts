@@ -1025,7 +1025,14 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
                 "transition_duration" to "${getParameter<UShort>("duration")}ms"
             )
         }
-        "showYuriChange" -> CommentLine(toString())
+        "showYuriChange" -> {
+            val isUp = getParameter<UByte>("type") == 2.UB
+            CommandLine(
+                "_animate",
+                if (isUp) "yuri-up" else "yuri-down",
+                "[{ \"opacity\": [0, 1, 0] }, 1000]"
+            )
+        }
         "setGoodEndCompleted" -> CommentLine(toString())
         "jumpIfHasCompletedEnds" -> CommentLine(" FIXME: $this")
         "addBacklog" -> ElementLine("text", value = getParameter("text"), comment = toString())
