@@ -1225,8 +1225,9 @@ private val TRAILING_REGEX = Regex("[　\n]+$")
 private fun <T> Instruction.getParameter(name: String): T {
     val parameter = parameters[name] as T
     return when (name) {
-        // Drop file name extension so that we can use a better file format when applicable.
-        "fileName" -> (parameter as String).substringBeforeLast('.') as T
+        // Drop file name extension so that we can use a better file format when applicable. And
+        // normalize to lower case as well.
+        "fileName" -> (parameter as String).substringBeforeLast('.').lowercase() as T
         "text" ->
             (parameter as String)
                 .replace('＄', '\n')
