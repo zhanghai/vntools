@@ -204,7 +204,7 @@ val instructionDescriptors = listOf(
         ParameterDescriptor("index", 3..3, UByte::class.java)
     ),
     // Appeared in all four seasons and called for all ends including the two virtual ends in
-    // 02a_00001.s and 03a_00001.s. Used by jumpIfHasCompletedEnds() in Printemps to Automne,
+    // 02a_00001.s and 03a_00001.s. Used by jumpIfEndCompleted() in Printemps to Automne,
     // although for Printemps it's probably only counting the good ends.
     InstructionDescriptor(
         "setEndCompleted", 0x21.UB, 0x04.UB,
@@ -278,14 +278,14 @@ val instructionDescriptors = listOf(
         ParameterDescriptor("_", 3..3, UByte::class.java) { require(it == 1.UB) { "_ ($it) != 1" } }
     ),
     // Only appeared in Automne and Hiver and only called for normal or good ends. Used by
-    // jumpIfHasCompletedEnds() in Hiver.
+    // jumpIfEndCompleted() in Hiver.
     InstructionDescriptor(
         "setGoodEndCompleted", 0x3A.UB, 0x04.UB,
         ParameterDescriptor("index", 2..2, UByte::class.java)
     ),
     InstructionDescriptor(
-        "jumpIfHasCompletedEnds", 0x3B.UB, 0x08.UB,
-        ParameterDescriptor("count", 2..2, UByte::class.java),
+        "jumpIfEndCompleted", 0x3B.UB, 0x08.UB,
+        ParameterDescriptor("index", 2..2, UByte::class.java),
         ParameterDescriptor("target", 4..7, JumpTarget::class.java)
     ),
     InstructionDescriptor(
@@ -967,7 +967,10 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
             ElementLine(choiceElementName, value = getParameter("text"), "script" to script)
         }
         "setVisibleEndCompleted" -> CommentLine(toString())
-        "setEndCompleted" -> CommentLine(toString())
+        "setEndCompleted" -> CommandLine(
+            "eval",
+            "$['end_${getParameter<UByte>("index")}'] = true"
+        )
         "playMusic" ->
             ElementLine(
                 "music",
@@ -1034,7 +1037,11 @@ fun Instruction.toVnMarkLines(state: VnmarkConversionState): List<Line> {
             )
         }
         "setGoodEndCompleted" -> CommentLine(toString())
-        "jumpIfHasCompletedEnds" -> CommentLine(" FIXME: $this")
+        "jumpIfEndCompleted" -> CommandLine(
+            "jump_if",
+            getParameter<JumpTarget>("target").toString(),
+            "$['end_${getParameter<UByte>("index")}']"
+        )
         "addBacklog" -> ElementLine("text", value = getParameter("text"), comment = toString())
         "setWindowVisible" ->
             CommandLine(
