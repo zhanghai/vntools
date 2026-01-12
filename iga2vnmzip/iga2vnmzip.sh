@@ -112,6 +112,9 @@ main() {
         done
     done
 
+    echo "Removing extraneous files..."
+    rm -f "$output_dir/foreground/ev08b.bmp"
+
     echo "Copying manifest..."
     cp manifest.yaml "$output_dir/"
 
