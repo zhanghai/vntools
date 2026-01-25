@@ -142,11 +142,6 @@ main() {
         mv "$f" "$output_dir/template/"
     done
 
-    echo "Moving title and credit images..."
-    for f in "$output_dir/template/logo"* "$output_dir/template/caution"* "$output_dir/template/title_base"* "$output_dir/template/flower0"* "$output_dir/template/title_logo"* "$output_dir/template/credit"*; do
-        mv "$f" "$output_dir/foreground/"
-    done
-
     echo "Converting script to VNMark..."
     kotlin ../igs2vnm/igs2vnm.main.kts "$output_dir/script" "$output_dir/vnmark"
     rm -r "$output_dir/script"
